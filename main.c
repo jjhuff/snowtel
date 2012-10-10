@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 
@@ -20,10 +21,12 @@ void UART_Init(unsigned int ubrr);
 int uart_putchar(char c, FILE *stream);
 int uart_getchar(FILE *stream);
 char uart_haschar(void);
-int sonar_ping(void);
+void sonar_ping(void);
 
 FILE uart = FDEV_SETUP_STREAM(uart_putchar, uart_getchar, _FDEV_SETUP_RW);
 
+uint16_t sonar_pulse_len;
+uint16_t sonar_pulse_start;
 
 /////===================================////////////////////
 
@@ -172,7 +175,29 @@ void mlx_set_emissivity(double val)
     mlx_reset();
 }
 
-int sonar_ping()
+ISR(TIMER1_CAPT_vect)
+{
+    uint16_t icr = ICR1;
+    uint8_t tccr1b = TCCR1B;
+
+    // Toggle the capture edge
+    TCCR1B = tccr1b ^ (1 << ICES1);
+
+    if ((tccr1b & (1 << ICES1)))
+    {
+        // we caught the rising edge
+        sonar_pulse_start = icr;
+    }
+    else
+    {
+        // we caught the falling edge
+        sonar_pulse_len = (icr - sonar_pulse_start)>>1;
+    }
+
+    return;
+}
+
+void sonar_ping()
 {
     // Toggle trig
     PORTB |= 1<<1;
@@ -180,36 +205,7 @@ int sonar_ping()
     PORTB &= ~(1<<1);
     _delay_us(20);
 
-    uint32_t i;
-
-    const uint32_t MAXLOOP = 600000;
-
-    // wait for rising edge
-    for(i=0;i<MAXLOOP;i++)
-    {
-        if((PINB & 1<<0) > 0)
-            break;
-    }
-    if (i==MAXLOOP)
-        return 0;
-
-    TCCR1A=0x00;
-    TCCR1B=(1<<CS11); //Prescaler = Fcpu/8
-    TCNT1=0x00;       //Init counter
-
-    // Wait for falling edge
-    for(i=0;i<MAXLOOP;i++)
-    {
-        if((PINB & 1<<0) == 0)
-            break;
-    }
-    if (i==MAXLOOP)
-        return 0;
-
-    i = TCNT1;
-    TCCR1B=0x00;
-
-    return i>>1;
+    _delay_ms(100);
 }
 
 #define MODE_READ_TEMP          't'
@@ -238,10 +234,11 @@ int main(void)
     i2c_init();
     _delay_ms(1000);
 
+    sei();
+
     puts("READY\n");
     char mode = 0;
     double d;
-    int dist;
     char buf[16];
     while(1)
     {
@@ -264,9 +261,9 @@ int main(void)
             case MODE_READ_DIST:
                 mode = 0;
             case MODE_READ_DIST_CONT:
-                dist = sonar_ping();
-                d = dist/58.0;
-                printf("%.2F\n", d);
+                sonar_ping();
+                d = sonar_pulse_len/58.0;
+                printf("%.1fcm\n", d);
                 break;
 
             case MODE_SET_EMISSIVITY:
@@ -300,10 +297,15 @@ void ioinit (void)
 {
     //1 = output, 0 = input
     DDRB = 0b00000010;
-    PORTB |= 1<<0; // PB0 pullup
+    //PORTB |= 1<<0; // PB0 pullup
     //DDRC = 0b00010000; //PORTC4 (SDA), PORTC5 (SCL), PORTC all others are inputs
     DDRD = 0b11111110; //PORTD (RX on PD0), PD2 is status output
     //PORTC = 0b00110000; //pullups on the I2C bus
+
+    TCCR1A = 0x00;
+    TCCR1B = (1<<ICES1) | (1<<CS11); // Prescaler = Fcpu/8
+    OCR1A  = 0;
+    TIMSK1 |= (1 << ICIE1);
 
     UART_Init((unsigned int)(F_CPU/16/(BAUD)-1));        // ocillator fq/16/baud rate -1
 }
