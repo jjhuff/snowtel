@@ -190,6 +190,11 @@ burn: $(TARGET).hex $(TARGET).eep size
 burn-fuse:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -U lfuse:w:$(AVRDUDE_FUSE_LOW):m -U hfuse:w:$(AVRDUDE_FUSE_HIGH):m
 
+burn-optiboot:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -U lfuse:w:0xD6:m -U hfuse:w:0xDE:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:w:optiboot_atmega328.hex
+
+
 # Create final output files (.hex, .eep) from ELF output file.
 %.hex: %.elf
 	$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@

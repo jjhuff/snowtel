@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <avr/wdt.h>
 #include <util/delay.h>
 
 #include "i2cmaster.h"
@@ -214,6 +215,7 @@ void sonar_ping()
 #define MODE_SET_EMISSIVITY     'E'
 #define MODE_READ_DIST          'd'
 #define MODE_READ_DIST_CONT     'D'
+#define MODE_UPGRADE            'u'
 
 void my_gets(char* buf)
 {
@@ -280,7 +282,10 @@ int main(void)
                 d = Ke/65535.0;
                 printf("%.2f\n", d);
                 break;
-
+            case MODE_UPGRADE:
+                wdt_enable(WDTO_1S);
+                while(1);
+                break;
             default:
                 mode = 0;
         }
@@ -302,12 +307,13 @@ void ioinit (void)
     DDRD = 0b11111110; //PORTD (RX on PD0), PD2 is status output
     //PORTC = 0b00110000; //pullups on the I2C bus
 
+    UART_Init((unsigned int)(F_CPU/16/(BAUD)-1));        // ocillator fq/16/baud rate -1
+
     TCCR1A = 0x00;
     TCCR1B = (1<<ICES1) | (1<<CS11); // Prescaler = Fcpu/8
     OCR1A  = 0;
     TIMSK1 |= (1 << ICIE1);
 
-    UART_Init((unsigned int)(F_CPU/16/(BAUD)-1));        // ocillator fq/16/baud rate -1
 }
 
 void UART_Init( unsigned int ubrr)
