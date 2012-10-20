@@ -264,6 +264,7 @@ int main(void)
                 mode = 0;
             case MODE_READ_DIST_CONT:
                 sonar_ping();
+                printf("%dus  ", sonar_pulse_len);
                 d = sonar_pulse_len/58.0;
                 printf("%.1fcm\n", d);
                 break;
