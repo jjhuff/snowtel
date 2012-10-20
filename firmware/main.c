@@ -105,8 +105,8 @@ double mlx_read_temp(uint8_t sensor)
     {
         return -100;
     } else {
-        //Tk = reg / 200; //temp Kelvin
-        return (((long)reg * (3.6)) - 45967)/100; //temp F
+        //return (((long)reg * (3.6)) - 45967)/100; //temp F
+        return ((long)reg/50.0) - 273.15; //temp C
     }
 }
 
@@ -255,9 +255,9 @@ int main(void)
                 mode = 0;
             case MODE_READ_TEMP_CONT:
                 d = mlx_read_temp(MLX_OBJECT);
-                printf("%.2fF  ", d);
+                printf("%.2fC  ", d);
                 d = mlx_read_temp(MLX_AMBIENT);
-                printf("%.2fF\n", d);
+                printf("%.2fC\n", d);
                 break;
 
             case MODE_READ_DIST:
