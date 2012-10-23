@@ -202,6 +202,7 @@ void sonar_ping()
 {
     // Toggle trig
     PORTB |= 1<<1;
+    sonar_pulse_len = 0;
     _delay_us(15);
     PORTB &= ~(1<<1);
     _delay_us(20);
@@ -291,7 +292,7 @@ int main(void)
                 mode = 0;
         }
         if (mode != 0)
-            _delay_ms(1000);
+            _delay_ms(100);
     }
 }
 
