@@ -256,18 +256,18 @@ int main(void)
                 mode = 0;
             case MODE_READ_TEMP_CONT:
                 d = mlx_read_temp(MLX_OBJECT);
-                printf("%.2fC  ", d);
+                printf("%.2f ", d);
                 d = mlx_read_temp(MLX_AMBIENT);
-                printf("%.2fC\n", d);
+                printf("%.2f\n", d);
                 break;
 
             case MODE_READ_DIST:
                 mode = 0;
             case MODE_READ_DIST_CONT:
                 sonar_ping();
-                printf("%dus  ", sonar_pulse_len);
+                printf("%d ", sonar_pulse_len);
                 d = sonar_pulse_len/58.0;
-                printf("%.1fcm\n", d);
+                printf("%.1f\n", d);
                 break;
 
             case MODE_SET_EMISSIVITY:
