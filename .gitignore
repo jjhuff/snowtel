@@ -8,3 +8,5 @@
 *.swp
 *.sym
 .dep/
+
+*.pyc
