@@ -18,15 +18,15 @@ import datetime
 from google.appengine.ext import db
 
 class Sensor(db.Model):
-    identifier = db.StringProperty(required=True)
     location_name = db.StringProperty()
+    snow_sensor_height = db.FloatProperty()
 
 class Reading(db.Model):
     sensor = db.ReferenceProperty(Sensor, required=True)
     timestamp = db.DateTimeProperty(auto_now=True, auto_now_add=True)
-    temp_ambient = db.FloatProperty()
-    temp_trail = db.FloatProperty()
-    snow_depth = db.FloatProperty()
+    ambient_temp = db.FloatProperty()
+    surface_temp = db.FloatProperty()
+    snow_height = db.FloatProperty()
 
 #def UpdateRatings(trail):
 #    min_time = datetime.datetime.now() - datetime.timedelta(days=2)

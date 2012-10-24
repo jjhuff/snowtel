@@ -14,8 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+#
+import logging
 
 import webapp2
+from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -27,11 +30,27 @@ class MainPage(webapp2.RequestHandler):
                 }
         self.response.out.write(template.render('templates/index.djhtml', template_values))
 
-class AddRating(webapp2.RequestHandler):
-    def post(self):
-        pass
+class SensorReadings(webapp2.RequestHandler):
+    def post(self, sensor_id):
+        sensor_key = db.Key.from_path('Sensor', sensor_id)
+        sensor = datastore.Sensor.get(sensor_key)
+        if not sensor:
+            sensor = datastore.Sensor(
+                key_name = sensor_id
+            )
+            sensor.put()
+        reading = datastore.Reading(
+            sensor = sensor,
+            ambient_temp = float(self.request.POST['ambient_temp']),
+            surface_temp = float(self.request.POST['surface_temp']),
+            snow_height = float(self.request.POST['snow_height'])
+        )
+        reading.put()
+        return webapp2.Response('')
+
 
 app = webapp2.WSGIApplication([
         ('/', MainPage),
+        ('/sensor/(.*)/readings', SensorReadings),
     ],debug=True)
 
