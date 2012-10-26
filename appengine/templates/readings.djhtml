@@ -8,10 +8,13 @@
 
     </head>
     <body>
-        <table>
-        {% for sensor in sensors %}
+        <table border=1>
+        {% for r in readings %}
         <tr>
-            <td><a href="/sensor/{{sensor.key.id_or_name}}/readings">{{ sensor.location_name|default:"Unknown" }}</a></td>
+            <td>{{ r.timestamp|time }}</td>
+            <td>{{ r.ambient_temp|default_if_none:"?" }}</td>
+            <td>{{ r.surface_temp|default_if_none:"?" }}</td>
+            <td>{{ r.snow_height|default_if_none:"?" }}</td>
         </tr>
         {% endfor %}
         </table>

@@ -10,3 +10,9 @@ handlers:
 - url: .*
   script: main.app
 
+libraries:
+- name: django
+  version: "1.4"
+
+env_variables:
+  DJANGO_SETTINGS_MODULE: 'settings'

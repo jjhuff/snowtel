@@ -15,22 +15,41 @@
 # limitations under the License.
 #
 #
+import datetime
 import logging
 
 import webapp2
 from google.appengine.ext import db
-from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+from django.template.loader import render_to_string
 
 import datastore
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
         template_values={
-                }
-        self.response.out.write(template.render('templates/index.djhtml', template_values))
+            'sensors': datastore.Sensor.all()
+        }
+        self.response.out.write(render_to_string('index.djhtml', template_values))
+
+def safe_float(s):
+    try:
+        return float(s)
+    except:
+        return None
 
 class SensorReadings(webapp2.RequestHandler):
+    def get(self, sensor_id):
+        sensor_key = db.Key.from_path('Sensor', sensor_id)
+        sensor = datastore.Sensor.get(sensor_key)
+        # only show last 24hrs
+        dt = datetime.datetime.now() - datetime.timedelta(hours=24)
+
+        template_values={
+            'readings': sensor.reading_set.filter('timestamp >', dt).order('-timestamp')
+        }
+        self.response.out.write(render_to_string('readings.djhtml', template_values))
+
     def post(self, sensor_id):
         sensor_key = db.Key.from_path('Sensor', sensor_id)
         sensor = datastore.Sensor.get(sensor_key)
@@ -41,9 +60,9 @@ class SensorReadings(webapp2.RequestHandler):
             sensor.put()
         reading = datastore.Reading(
             sensor = sensor,
-            ambient_temp = float(self.request.POST['ambient_temp']),
-            surface_temp = float(self.request.POST['surface_temp']),
-            snow_height = float(self.request.POST['snow_height'])
+            ambient_temp = safe_float(self.request.POST.get('ambient_temp', None)),
+            surface_temp = safe_float(self.request.POST.get('surface_temp', None)),
+            snow_height = safe_float(self.request.POST.get('snow_height', None))
         )
         reading.put()
         return webapp2.Response('')
