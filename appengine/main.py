@@ -44,9 +44,9 @@ class SensorReadings(webapp2.RequestHandler):
         sensor_key = db.Key.from_path('Sensor', sensor_id)
         sensor = datastore.Sensor.get(sensor_key)
         # only show last 24hrs
-        dt = datetime.datetime.now() - datetime.timedelta(hours=24)
-
-        readings = sensor.reading_set.filter('timestamp >', dt).order('-timestamp')
+        #dt = datetime.datetime.now() - datetime.timedelta(hours=24)
+        #readings = sensor.reading_set.filter('timestamp >', dt).order('-timestamp')
+        readings = sensor.reading_set
         ret = []
         for r in readings:
             ret.append([
