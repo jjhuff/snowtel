@@ -60,7 +60,8 @@ class SensorReadings(webapp2.RequestHandler):
             self.response.out.write(readings_json)
         else:
             template_values={
-                'readings_json': readings_json
+                'readings_json': readings_json,
+                'sensor': sensor
             }
             self.response.out.write(render_to_string('readings.djhtml', template_values))
 
@@ -72,11 +73,16 @@ class SensorReadings(webapp2.RequestHandler):
                 key_name = sensor_id
             )
             sensor.put()
+        distance = safe_float(self.request.POST.get('snow_height', None))
+        if distance:
+            snow_height = sensor.snow_sensor_height-distance
+        else:
+            snow_height = None
         reading = datastore.Reading(
             sensor = sensor,
             ambient_temp = safe_float(self.request.POST.get('ambient_temp', None)),
             surface_temp = safe_float(self.request.POST.get('surface_temp', None)),
-            snow_height = safe_float(self.request.POST.get('snow_height', None))
+            snow_height = snow_height
         )
         reading.put()
         return webapp2.Response('')
