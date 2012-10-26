@@ -9,6 +9,12 @@
     </head>
     <body>
         <table border=1>
+        <tr>
+            <th>Time</th>
+            <th>Ambient</th>
+            <th>Surface</th>
+            <th>Snow Height</th>
+        </tr>
         {% for r in readings %}
         <tr>
             <td>{{ r.timestamp|time }}</td>
