@@ -22,8 +22,8 @@
 
                 var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('chart_div'));
                 chart.draw(data, {
-                    scaleType:'allfixed',
-                    scaleColumns: [0, 1],
+                    scaleType:'allmaximized',
+                    scaleColumns: [0, 2],
                     numberFormats:["##.#\u00B0C", "##.#\u00B0C", "###.#cm"]
                 });
           }
