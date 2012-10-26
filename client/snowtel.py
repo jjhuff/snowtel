@@ -55,7 +55,7 @@ def calc_medians(data):
 
     for k,v in medians.items():
         v = median(v)
-        if v == None:
+        if v != None:
             medians[k] = v
         else:
             del medians[k]
