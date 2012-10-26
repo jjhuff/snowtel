@@ -82,7 +82,7 @@ if __name__ == "__main__":
     server_url = 'http://%s/sensor/%s/readings'%(options.server, options.sensor_id)
 
     readings = []
-    report_interval = options.rate
+    report_interval = int(options.rate)
     last_report = time.time()
 
     while True:
@@ -93,8 +93,8 @@ if __name__ == "__main__":
                 last_report = time.time()
                 m = calc_medians(readings)
                 print '\t'.join('%s: %.1f'%x for x in m.iteritems())
-                ret = urllib2.urlopen(server_url, urllib.urlencode(m));
                 sys.stdout.flush()
+                ret = urllib2.urlopen(server_url, urllib.urlencode(m));
                 readings = []
         except Exception,e:
             print e
