@@ -15,10 +15,3 @@ indexes:
   - name: sensor
   - name: timestamp
     direction: desc
-
-- kind: Reading
-  properties:
-  - name: sensor
-  - name: timestamp>
-  - name: timestamp
-    direction: desc
