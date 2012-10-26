@@ -54,7 +54,11 @@ def calc_medians(data):
             medians.setdefault(k,[]).append(v)
 
     for k,v in medians.items():
-        medians[k] = median(v)
+        v = median(v)
+        if v == None:
+            medians[k] = v
+        else:
+            del medians[k]
 
     return medians
 
@@ -73,8 +77,8 @@ if __name__ == "__main__":
             if time.time() - last_report > report_interval:
                 last_report = time.time()
                 m = calc_medians(readings)
+                print m
                 ret = urllib2.urlopen(server_url, urllib.urlencode(m));
-                print ret.read();
                 sys.stdout.flush()
                 readings = []
         except Exception,e:
