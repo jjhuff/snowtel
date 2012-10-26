@@ -66,11 +66,14 @@ class SensorReadings(webapp2.RequestHandler):
             self.response.out.write(render_to_string('readings.djhtml', template_values))
 
     def post(self, sensor_id):
+        distance = safe_float(self.request.POST.get('snow_height', None))
+
         sensor_key = db.Key.from_path('Sensor', sensor_id)
         sensor = datastore.Sensor.get(sensor_key)
         if not sensor:
             sensor = datastore.Sensor(
-                key_name = sensor_id
+                key_name = sensor_id,
+                snow_sensor_height = distance       # Pick the first reading as the height
             )
             sensor.put()
         distance = safe_float(self.request.POST.get('snow_height', None))
