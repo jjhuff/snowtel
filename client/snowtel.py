@@ -1,15 +1,13 @@
 #!/usr/bin/python
-import urllib
-import urllib2
+from optparse import OptionParser
 import sys
 import time
+from uuid import getnode
+import urllib
+import urllib2
 
 import serial
 
-port = sys.argv[1]
-server_url = sys.argv[2]
-
-ser = serial.Serial(port, 9600, timeout=10, xonxoff=True)
 
 def safe_float(s):
     try:
@@ -17,7 +15,7 @@ def safe_float(s):
     except ValueError:
         return None
 
-def read():
+def read(ser):
     d = {
         'ambient_temp': None,
         'surface_temp': None,
@@ -66,18 +64,35 @@ def calc_medians(data):
 
 #################################################
 if __name__ == "__main__":
+    usage = "usage: %prog [options]"
+    parser = OptionParser(usage=usage)
+    parser.add_option("-i", "--id", dest="sensor_id", default=getnode(),
+                      help="Server to talk to")
+    parser.add_option("-s", "--server", dest="server", default="methowsnow.appspot.com",
+                      help="Server to talk to")
+    parser.add_option("-r", "--rate", dest="rate", default=10,
+                    help="How often to send data to the server")
+    parser.add_option("-p", "--port", dest="port", default="/dev/ttyUSB0",
+                      help="Sensor id")
+
+    (options, args) = parser.parse_args()
+
+    ser = serial.Serial(options.port, 9600, timeout=10, xonxoff=True)
+
+    server_url = 'http://%s/sensor/%s/readings'%(options.server, options.sensor_id)
+
     readings = []
-    report_interval = 10
+    report_interval = options.rate
     last_report = time.time()
 
     while True:
         try:
-            d = read();
+            d = read(ser);
             readings.append(d);
             if time.time() - last_report > report_interval:
                 last_report = time.time()
                 m = calc_medians(readings)
-                print m
+                print '\t'.join('%s: %.1f'%x for x in m.iteritems())
                 ret = urllib2.urlopen(server_url, urllib.urlencode(m));
                 sys.stdout.flush()
                 readings = []
