@@ -9,9 +9,20 @@
     </head>
     <body>
         <table>
+        <tr>
+            <th>Sensor</th>
+            <th>Air Temp</th>
+            <th>Snow Temp</th>
+            <th>Snow Height</th>
+        </tr>
         {% for sensor in sensors %}
         <tr>
-            <td><a href="/sensor/{{sensor.key.id_or_name}}/readings">{{ sensor.location_name|default:"Unknown" }}</a></td>
+            <td><a href="/sensor/{{sensor.key.id_or_name}}/readings">{{ sensor.location_name }}</a></td>
+            {% with cur_reading=sensor.reading_set.get %}
+            <td>{{cur_reading.ambient_temp}}</td>
+            <td>{{cur_reading.surface_temp}}</td>
+            <td>{{cur_reading.snow_height}}</td>
+            {% endwith %}
         </tr>
         {% endfor %}
         </table>
