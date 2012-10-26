@@ -1,28 +1,36 @@
 <html>
     <head>
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-        <script type="text/javascript">
-        $(document).ready(function(){
-        });
-        </script>
+        <script type='text/javascript' src='//www.google.com/jsapi'></script>
 
+        <script type="text/javascript">
+            var readings = {{readings_json|safe}}
+        </script>
+        <script type="text/javascript">
+            google.load('visualization', '1', {'packages':['annotatedtimeline']});
+            google.setOnLoadCallback(drawChart);
+            function drawChart() {
+                for (i in readings) {
+                    readings[i][0] = new Date(readings[i][0])
+                }
+                var data = new google.visualization.DataTable();
+                data.addColumn('datetime', 'Date');
+                data.addColumn('number', 'Ambient');
+                data.addColumn('number', 'Surface');
+                data.addColumn('number', 'Snow Height');
+                data.addRows(readings);
+
+                var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('chart_div'));
+                chart.draw(data, {
+                    scaleType:'allfixed',
+                    scaleColumns: [0, 1],
+                    numberFormats:["##.#\u00B0C", "##.#\u00B0C", "###.#cm"]
+                });
+          }
+        </script>
+    
     </head>
     <body>
-        <table border=1>
-        <tr>
-            <th>Time</th>
-            <th>Ambient</th>
-            <th>Surface</th>
-            <th>Snow Height</th>
-        </tr>
-        {% for r in readings %}
-        <tr>
-            <td>{{ r.timestamp|time }}</td>
-            <td>{{ r.ambient_temp|default_if_none:"?" }}</td>
-            <td>{{ r.surface_temp|default_if_none:"?" }}</td>
-            <td>{{ r.snow_height|default_if_none:"?" }}</td>
-        </tr>
-        {% endfor %}
-        </table>
+        <div id='chart_div' style='width: 700px; height: 240px;'></div>
     </body>
 </html>

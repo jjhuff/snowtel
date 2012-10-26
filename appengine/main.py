@@ -17,6 +17,7 @@
 #
 import datetime
 import logging
+import json
 
 import webapp2
 from google.appengine.ext import db
@@ -45,10 +46,23 @@ class SensorReadings(webapp2.RequestHandler):
         # only show last 24hrs
         dt = datetime.datetime.now() - datetime.timedelta(hours=24)
 
-        template_values={
-            'readings': sensor.reading_set.filter('timestamp >', dt).order('-timestamp')
-        }
-        self.response.out.write(render_to_string('readings.djhtml', template_values))
+        readings = sensor.reading_set.filter('timestamp >', dt).order('-timestamp')
+        ret = []
+        for r in readings:
+            ret.append([
+                r.timestamp.isoformat(),
+                r.ambient_temp,
+                r.surface_temp,
+                r.snow_height
+            ])
+        readings_json = json.dumps(ret)
+        if self.request.get('format', None) == 'json':
+            self.response.out.write(readings_json)
+        else:
+            template_values={
+                'readings_json': readings_json
+            }
+            self.response.out.write(render_to_string('readings.djhtml', template_values))
 
     def post(self, sensor_id):
         sensor_key = db.Key.from_path('Sensor', sensor_id)
