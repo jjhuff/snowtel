@@ -28,9 +28,12 @@
                 });
           }
         </script>
-    
     </head>
     <body>
+        <h1>{{sensor.location_name}}</h1>
+        <br/>
         <div id='chart_div' style='width: 700px; height: 240px;'></div>
+        <br/>
+        <a href='/'>Back</a>
     </body>
 </html>
