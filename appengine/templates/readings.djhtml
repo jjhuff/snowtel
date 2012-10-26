@@ -15,8 +15,8 @@
                 }
                 var data = new google.visualization.DataTable();
                 data.addColumn('datetime', 'Date');
-                data.addColumn('number', 'Ambient');
-                data.addColumn('number', 'Surface');
+                data.addColumn('number', 'Air Temp');
+                data.addColumn('number', 'Snow Temp');
                 data.addColumn('number', 'Snow Height');
                 data.addRows(readings);
 
@@ -24,7 +24,7 @@
                 chart.draw(data, {
                     scaleType:'allmaximized',
                     scaleColumns: [0, 2],
-                    numberFormats:["##.#\u00B0C", "##.#\u00B0C", "###.#cm"]
+                    numberFormats:["##.#\u00B0C", "##.#\u00B0C", "###cm"]
                 });
           }
         </script>
