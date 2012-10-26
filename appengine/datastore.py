@@ -18,8 +18,8 @@ import datetime
 from google.appengine.ext import db
 
 class Sensor(db.Model):
-    location_name = db.StringProperty()
-    snow_sensor_height = db.FloatProperty()
+    location_name = db.StringProperty(default="New Sensor")
+    snow_sensor_height = db.FloatProperty(default=0.0)
 
 class Reading(db.Model):
     sensor = db.ReferenceProperty(Sensor, required=True)
@@ -28,17 +28,3 @@ class Reading(db.Model):
     surface_temp = db.FloatProperty()
     snow_height = db.FloatProperty()
 
-#def UpdateRatings(trail):
-#    min_time = datetime.datetime.now() - datetime.timedelta(days=2)
-#    ratings = Rating.all().filter('trail =', trail.key()).filter('timestamp >', min_time)
-#    total=0
-#    count=0
-#    for rating in ratings:
-#        total += rating.rating
-#        count += 1
-#    if count > 0:
-#        trail.current_rating = round(float(total)/count)
-#    else:
-#        trail.current_rating = -1.0
-#    trail.current_rating_count = count
-#    trail.put()
