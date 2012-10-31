@@ -22,7 +22,6 @@ void UART_Init(unsigned int ubrr);
 int uart_putchar(char c, FILE *stream);
 int uart_getchar(FILE *stream);
 char uart_haschar(void);
-void sonar_ping(void);
 
 FILE uart = FDEV_SETUP_STREAM(uart_putchar, uart_getchar, _FDEV_SETUP_RW);
 
@@ -198,18 +197,6 @@ ISR(TIMER1_CAPT_vect)
     return;
 }
 
-void sonar_ping()
-{
-    // Toggle trig
-    PORTB |= 1<<1;
-    sonar_pulse_len = 0;
-    _delay_us(15);
-    PORTB &= ~(1<<1);
-    _delay_us(20);
-
-    _delay_ms(100);
-}
-
 #define MODE_READ_TEMP          't'
 #define MODE_READ_TEMP_CONT     'T'
 #define MODE_READ_EMISSIVITY    'e'
@@ -264,9 +251,8 @@ int main(void)
             case MODE_READ_DIST:
                 mode = 0;
             case MODE_READ_DIST_CONT:
-                sonar_ping();
                 printf("%d ", sonar_pulse_len);
-                d = sonar_pulse_len/58.0;
+                d = sonar_pulse_len/10.0;
                 printf("%.1f\n", d);
                 break;
 
