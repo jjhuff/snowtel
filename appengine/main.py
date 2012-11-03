@@ -41,8 +41,6 @@ def safe_float(s):
 
 class SensorReadings(webapp2.RequestHandler):
     def get(self, sensor_id):
-        self.response.out.write(render_to_string('readings.djhtml', {}))
-        return
         sensor_key = db.Key.from_path('Sensor', sensor_id)
         sensor = datastore.Sensor.get(sensor_key)
         # only show last 24hrs
