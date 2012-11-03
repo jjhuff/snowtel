@@ -82,6 +82,7 @@
                     readings[i][0] = new Date(readings[i][0])
                 }
                 data.addRows(readings)
+                data.sort(0)
           
                 dashboard.bind(control, temp_chart);
                 dashboard.bind(control, snow_chart);
