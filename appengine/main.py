@@ -32,10 +32,25 @@ import datastore
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
-        template_values={
-            'sensors': datastore.Sensor.all()
-        }
-        self.response.out.write(render_to_string('index.djhtml', template_values))
+        sensors = []
+        for s in datastore.Sensor.all():
+            cur = s.reading_set.get()
+            sensors.append({
+                'id': s.key().id_or_name(),
+                'url': '/sensor/%s/readings'%s.key().id_or_name(),
+                'name': s.location_name,
+                'air': cur.ambient_temp,
+                'surface': cur.surface_temp,
+                'depth': cur.snow_height
+                })
+        sensors_json = json.dumps(sensors)
+        if self.request.get('format', None) == 'json':
+            self.response.out.write(sensors_json)
+        else:
+            template_values={
+                'sensors_json': sensors_json
+            }
+            self.response.out.write(render_to_string('index.djhtml', template_values))
 
 def safe_float(s):
     try:
