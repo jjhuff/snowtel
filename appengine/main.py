@@ -17,9 +17,13 @@
 #
 import datetime
 import logging
+import pickle
 import json
+import time
+import zlib
 
 import webapp2
+from google.appengine.api import memcache
 from google.appengine.ext import db
 from google.appengine.ext.webapp.util import run_wsgi_app
 from django.template.loader import render_to_string
@@ -40,22 +44,38 @@ def safe_float(s):
         return None
 
 class SensorReadings(webapp2.RequestHandler):
-    def get(self, sensor_id):
-        sensor_key = db.Key.from_path('Sensor', sensor_id)
-        sensor = datastore.Sensor.get(sensor_key)
-        # only show last 24hrs
-        #dt = datetime.datetime.now() - datetime.timedelta(hours=24)
-        #readings = sensor.reading_set.filter('timestamp >', dt).order('-timestamp')
-        readings = sensor.reading_set
-        ret = []
+    def _getReadings(self, sensor):
+        readings_cache_key = 'r-'+sensor.key().id_or_name()
+        data = memcache.get(readings_cache_key)
+        if data:
+            data = pickle.loads(zlib.decompress(data))
+            oldest_dt = datetime.datetime.fromtimestamp(1+max(data, key=lambda r:r[0])[0]) # add an extra second to acount for fractional seconds
+            readings = sensor.reading_set.filter('timestamp >', oldest_dt)
+        else:
+            data = []
+            readings = sensor.reading_set
+
+        # append any readings we need to
+        cache_set = False
         for r in readings:
-            ret.append([
-                r.timestamp.isoformat(),
+            cache_set = True
+            data.append([
+                time.mktime(r.timestamp.timetuple()),
                 r.ambient_temp,
                 r.surface_temp,
                 r.snow_height
             ])
-        readings_json = json.dumps(ret)
+        if cache_set:
+            dump = zlib.compress( pickle.dumps(data, pickle.HIGHEST_PROTOCOL), 9)
+            logging.info('Readings compressed size: %d'%len(dump))
+            memcache.set(readings_cache_key, dump)
+        return data
+
+    def get(self, sensor_id):
+        sensor_key = db.Key.from_path('Sensor', sensor_id)
+        sensor = datastore.Sensor.get(sensor_key)
+        readings = self._getReadings(sensor)
+        readings_json = json.dumps(readings)
         if self.request.get('format', None) == 'json':
             self.response.out.write(readings_json)
         else:

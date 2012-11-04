@@ -79,7 +79,7 @@
                 data.addColumn('number', 'Snow Temp');
                 data.addColumn('number', 'Snow Depth');
                 for (i in readings) {
-                    readings[i][0] = new Date(readings[i][0])
+                    readings[i][0] = new Date(readings[i][0]*1000)
                 }
                 data.addRows(readings)
                 data.sort(0)
