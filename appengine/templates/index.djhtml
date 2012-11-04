@@ -15,7 +15,7 @@
             <th>Sensor</th>
             <th>Air Temp</th>
             <th>Snow Temp</th>
-            <th>Snow Height</th>
+            <th>Snow Depth</th>
         </tr>
         {% for sensor in sensors %}
         <tr>
