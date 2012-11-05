@@ -34,7 +34,7 @@ class MainPage(webapp2.RequestHandler):
     def get(self):
         sensors = []
         for s in datastore.Sensor.all():
-            cur = s.reading_set.get()
+            cur = s.reading_set.order('-timestamp').get()
             sensors.append({
                 'id': s.key().id_or_name(),
                 'url': '/sensor/%s/readings'%s.key().id_or_name(),
