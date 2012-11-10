@@ -153,7 +153,7 @@ class MergeSensorReadings(webapp2.RequestHandler):
 
         from_id = self.request.GET.get('from')
         from_sensor = datastore.Sensor.get( db.Key.from_path('Sensor', from_id))
-        from_readings = from_sensor.reading_set.order('timestamp')
+        from_readings = from_sensor.reading_set.order('-timestamp')
 
         c = 0
         start = time.time()

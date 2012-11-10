@@ -14,3 +14,4 @@ indexes:
   properties:
   - name: sensor
   - name: timestamp
+    direction: desc
