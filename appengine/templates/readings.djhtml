@@ -18,7 +18,9 @@
             function drawVisualization() {
                 var dashboard = new google.visualization.Dashboard(
                     document.getElementById('dashboard'));
-          
+         
+                var stop_dt = new Date()
+                var start_dt = new Date(stop_dt.getTime() - (24*60*60*1000));
                 var control = new google.visualization.ControlWrapper({
                     'controlType': 'ChartRangeFilter',
                     'containerId': 'control',
@@ -40,8 +42,7 @@
                             'minRangeSize': 60 * 60 * 1000
                         }
                     },
-                    // Initial range: 2012-02-09 to 2012-03-20.
-     //               'state': {'range': {'start': new Date(2012, 1, 9), 'end': new Date(2012, 2, 20)}}
+                    'state': {'range': {'start': start_dt, 'end': stop_dt}}
                 });
          
                 // Plot the snow temps 
