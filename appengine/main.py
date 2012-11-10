@@ -35,14 +35,17 @@ class MainPage(webapp2.RequestHandler):
         sensors = []
         for s in datastore.Sensor.all():
             cur = s.reading_set.order('-timestamp').get()
-            sensors.append({
+            d = {
                 'id': s.key().id_or_name(),
                 'url': '/sensor/%s/readings'%s.key().id_or_name(),
-                'name': s.location_name,
-                'air': cur.ambient_temp,
+                'name': s.location_name
+                }
+            if cur:
+                d.update({'air': cur.ambient_temp,
                 'surface': cur.surface_temp,
                 'depth': cur.snow_height
                 })
+            sensors.append(d)
         sensors_json = json.dumps(sensors)
         if self.request.get('format', None) == 'json':
             self.response.out.write(sensors_json)
@@ -143,11 +146,36 @@ class FilterSensorReadings(webapp2.RequestHandler):
                     r.snow_height = None
                     r.put()
 
+class MergeSensorReadings(webapp2.RequestHandler):
+    def get(self, sensor_id):
+        sensor_key = db.Key.from_path('Sensor', sensor_id)
+        sensor = datastore.Sensor.get(sensor_key)
+
+        from_id = self.request.GET.get('from')
+        from_sensor = datastore.Sensor.get( db.Key.from_path('Sensor', from_id))
+        from_readings = from_sensor.reading_set.order('-timestamp')
+
+        c = 0
+        start = time.time()
+        for r in from_readings:
+            logging.info("merging: %s"%r.timestamp)
+            reading = datastore.Reading(sensor = sensor)
+            reading.timestamp = r.timestamp
+            reading.ambient_temp = r.ambient_temp
+            reading.surface_temp = r.surface_temp
+            reading.snow_height = r.snow_height
+            reading.put()
+            r.delete()
+            c+=1
+            if time.time()-start >= 20:
+                break
+        return webapp2.Response(str(c))
 
 
 app = webapp2.WSGIApplication([
         ('/', MainPage),
         ('/sensor/(.*)/readings', SensorReadings),
         ('/sensor/(.*)/filter_readings', FilterSensorReadings),
+        ('/sensor/(.*)/merge', MergeSensorReadings),
     ],debug=True)
 

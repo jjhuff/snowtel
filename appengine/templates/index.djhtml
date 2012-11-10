@@ -14,10 +14,16 @@
         <script type="text/javascript">
         $(document).ready(function(){
             function format_temp(t) {
-                return t.toFixed(1)
+                if(t)
+                    return t.toFixed(1)
+                else
+                    return ''
             }
             function format_distance(t) {
-                return t.toFixed(1)
+                if(t)
+                    return t.toFixed(1)
+                else
+                    return ''
             }
             for (i in sensors) {
                 var s = sensors[i]
