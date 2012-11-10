@@ -125,9 +125,29 @@ class SensorReadings(webapp2.RequestHandler):
         reading.put()
         return webapp2.Response('')
 
+class FilterSensorReadings(webapp2.RequestHandler):
+    def get(self, sensor_id):
+        sensor_key = db.Key.from_path('Sensor', sensor_id)
+        sensor = datastore.Sensor.get(sensor_key)
+        readings = sensor.reading_set.order('-timestamp')
+        max_height = safe_float(self.request.GET.get('max_height', None))
+        min_height = safe_float(self.request.GET.get('min_height', None))
+        for r in readings:
+            if r.snow_height:
+                if max_height and r.snow_height > max_height :
+                    logging.info('removing %s height:%f'%(r.timestamp, r.snow_height))
+                    r.snow_height = None
+                    r.put()
+                if min_height and r.snow_height < min_height :
+                    logging.info('removing %s height:%f'%(r.timestamp, r.snow_height))
+                    r.snow_height = None
+                    r.put()
+
+
 
 app = webapp2.WSGIApplication([
         ('/', MainPage),
         ('/sensor/(.*)/readings', SensorReadings),
+        ('/sensor/(.*)/filter_readings', FilterSensorReadings),
     ],debug=True)
 
