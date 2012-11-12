@@ -34,8 +34,6 @@
                                 'hAxis': {'baselineColor': 'none'},
                                 'series': [{'color': AIR_TEMP}, {'color':SNOW_HEIGHT}] // airtemp & snow height
                             },
-                            // Display a single series that shows the closing value of the stock.
-                            // Thus, this view has two columns: the date (axis) and the stock value (line series).
                             'chartView': {
                                 'columns': [0, 1, 3]
                             },
@@ -72,6 +70,17 @@
                     },
                     'view': {'columns': [0,3]}
                 });
+
+             /*   var scatter_chart = new google.visualization.ChartWrapper({
+                    'chartType': 'ScatterChart',
+                    'containerId': 'scatter_chart',
+                    'options': {
+                        legend: 'none',
+                        hAxis: {title: 'Air Temp', format:'##.#\u00B0C'},
+                        vAxis: {title: 'Snow Height', format:'###cm'},
+                    },
+                    'view': {'columns': [1,3]}
+                });*/
           
                 var data = new google.visualization.DataTable();
                 data.addColumn('datetime', 'Date');
@@ -86,6 +95,7 @@
           
                 dashboard.bind(control, temp_chart);
                 dashboard.bind(control, snow_chart);
+            //    dashboard.bind(control, scatter_chart);
                 dashboard.draw(data);
             }
             google.setOnLoadCallback(drawVisualization);
@@ -98,6 +108,7 @@
             <div id="temp_chart" style='height: 200px;'></div>
             <div id="snow_chart" style='height: 200px;'></div>
             <div id="control" style='height: 50px;'></div>
+            {#<div id="scatter_chart" style='height: 800px; width: 800px;'></div>#}
         </div>
         <br/>
         <a href='/'>Back</a>
