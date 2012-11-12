@@ -115,10 +115,13 @@ class SensorReadings(webapp2.RequestHandler):
             )
             sensor.put()
         distance = safe_float(self.request.POST.get('snow_height', None))
+        snow_height = None
         if distance:
-            snow_height = sensor.snow_sensor_height-distance
-        else:
-            snow_height = None
+            if distance < 400:
+                snow_height = sensor.snow_sensor_height-distance
+            else:
+                logging.info("Invalid height reading: %f"%distance)
+
         reading = datastore.Reading(
             sensor = sensor,
             ambient_temp = safe_float(self.request.POST.get('ambient_temp', None)),
