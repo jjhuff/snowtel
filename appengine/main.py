@@ -71,7 +71,7 @@ class SensorReadings(webapp2.RequestHandler):
             readings = sensor.reading_set.filter('timestamp >', oldest_dt)
         else:
             data = []
-            readings = sensor.reading_set
+            readings = sensor.reading_set.order('-timestamp')
 
         # append any readings we need to
         cache_set = False

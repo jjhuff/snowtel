@@ -7,6 +7,7 @@
 
         <script type="text/javascript">
             var readings = {{readings_json|safe}}
+            //var readings = {% include "sample_data.json" %}
         </script>
         <script type="text/javascript">
             google.load('visualization', '1.1', {packages: ['corechart', 'controls']});
@@ -57,7 +58,7 @@
                     'view': {'columns': [0,1,2]}
                 });
 
-                // Plot the snow temps 
+                // Plot the snow heights
                 var snow_chart = new google.visualization.ChartWrapper({
                     'chartType': 'LineChart',
                     'containerId': 'snow_chart',
@@ -89,6 +90,9 @@
                 data.addColumn('number', 'Snow Depth');
                 for (i in readings) {
                     readings[i][0] = new Date(readings[i][0]*1000)
+                    if (readings[i][3] == null) {
+                        readings[i][3] = 0
+                    }
                 }
                 data.addRows(readings)
                 data.sort(0)
