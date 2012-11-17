@@ -252,7 +252,7 @@ int main(void)
                 mode = 0;
             case MODE_READ_DIST_CONT:
                 printf("%d ", sonar_pulse_len);
-                d = sonar_pulse_len/10.0;
+                d = sonar_pulse_len/58.0;
                 printf("%.1f\n", d);
                 break;
 
