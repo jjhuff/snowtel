@@ -14,4 +14,9 @@ indexes:
   properties:
   - name: sensor
   - name: timestamp
+
+- kind: Reading
+  properties:
+  - name: sensor
+  - name: timestamp
     direction: desc

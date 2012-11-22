@@ -17,6 +17,22 @@
             var SNOW_TEMP = '#81F79F'
             var AIR_TEMP = '#81DAF5'
 
+            function Filter(size) {
+                return {
+                    _values: [],
+                    add: function(val) {
+                        if( this._values.push(val) > size)
+                            this._values.shift()
+
+                        var sum = 0
+                        for (var i in this._values)
+                            sum += this._values[i]
+
+                        return sum/this._values.length
+                    }
+                }
+            }
+
             function drawVisualization() {
                 var dashboard = new google.visualization.Dashboard(
                     document.getElementById('dashboard'));
@@ -79,14 +95,22 @@
                 data.addColumn('number', 'Surface');
                 data.addColumn('number', 'Snow Depth');
                 data.addColumn('number', 'Snow Depth (Adj)');
+
+                var depth_filter = new Filter(6)
+                var adj_depth_filter = new Filter(6)
                 for (i in readings) {
                     readings[i][0] = new Date(readings[i][0]*1000)
+                    // Snow depth
                     if (readings[i][3] == null) {
                         readings[i][3] = 0
                     }
+                    readings[i][3] = depth_filter.add(readings[i][3])
+
+                    // temp-corrected snow depth
                     if (readings[i][4] == null) {
                         readings[i][4] = 0
                     }
+                    readings[i][4] = adj_depth_filter.add(readings[i][4])
                 }
                 data.addRows(readings)
                 data.sort(0)
