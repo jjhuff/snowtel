@@ -87,6 +87,11 @@ class SensorReadings(webapp2.RequestHandler):
             dump = zlib.compress( pickle.dumps(data, pickle.HIGHEST_PROTOCOL), 9)
             logging.info('Readings compressed size: %d'%len(dump))
             memcache.set(readings_cache_key, dump)
+
+        for r in data:
+            if r[2] and r[3]:
+                offset = sensor.snow_sensor_height*(.6/331.4)*r[2]
+                r.append(r[3] - offset)
         return data
 
     def get(self, sensor_id):

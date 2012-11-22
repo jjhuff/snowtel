@@ -13,6 +13,7 @@
             google.load('visualization', '1.1', {packages: ['corechart', 'controls']});
 
             var SNOW_HEIGHT = '#F79F81'
+            var SNOW_HEIGHT_ADJ = '#C79F81'
             var SNOW_TEMP = '#81F79F'
             var AIR_TEMP = '#81DAF5'
 
@@ -67,9 +68,9 @@
                         'chartArea': {'height': '95%', 'width': '80%'},
                         'hAxis': {'textPosition': 'in'},
                         'vAxis': {'format':'###cm'},
-                        'series': [{'color': SNOW_HEIGHT}]
+                        'series': [{'color': SNOW_HEIGHT}, {'color':SNOW_HEIGHT_ADJ}]
                     },
-                    'view': {'columns': [0,3]}
+                    'view': {'columns': [0,3,4]}
                 });
 
              /*   var scatter_chart = new google.visualization.ChartWrapper({
@@ -88,10 +89,14 @@
                 data.addColumn('number', 'Air');
                 data.addColumn('number', 'Surface');
                 data.addColumn('number', 'Snow Depth');
+                data.addColumn('number', 'Snow Depth (Adj)');
                 for (i in readings) {
                     readings[i][0] = new Date(readings[i][0]*1000)
                     if (readings[i][3] == null) {
                         readings[i][3] = 0
+                    }
+                    if (readings[i][4] == null) {
+                        readings[i][4] = 0
                     }
                 }
                 data.addRows(readings)
@@ -113,6 +118,7 @@
                     suffix: 'cm'
                 });
                 height_formatter.format(data, 3);
+                height_formatter.format(data, 4);
 
                 dashboard.bind(control, temp_chart);
                 dashboard.bind(control, snow_chart);
