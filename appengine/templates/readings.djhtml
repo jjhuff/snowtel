@@ -10,7 +10,7 @@
 
         <script type="text/javascript">
             var readings = {{readings_json|safe}}
-            var readings = {% include "sample_data.json" %}
+            {#var readings = {% include "sample_data.json" %}#}
         </script>
         <script type="text/javascript">
             google.load('visualization', '1.1', {packages: ['corechart', 'controls']});
