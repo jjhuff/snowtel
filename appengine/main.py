@@ -34,17 +34,17 @@ class MainPage(webapp2.RequestHandler):
     def get(self):
         sensors = []
         for s in datastore.Sensor.all():
-            cur = s.reading_set.order('-timestamp').get()
+            #cur = s.reading_set.order('-timestamp').get()
             d = {
                 'id': s.key().id_or_name(),
                 'url': '/sensor/%s/readings'%s.key().id_or_name(),
                 'name': s.location_name
                 }
-            if cur:
-                d.update({'air': cur.ambient_temp,
-                'surface': cur.surface_temp,
-                'depth': cur.snow_height
-                })
+            #if cur:
+            #    d.update({'air': cur.ambient_temp,
+            #    'surface': cur.surface_temp,
+            #    'depth': cur.snow_height
+            #    })
             sensors.append(d)
         sensors_json = json.dumps(sensors)
         if self.request.get('format', None) == 'json':

@@ -30,9 +30,9 @@
                 var row = $('<tr>')
                 var link = $('<a>').text(s.name).attr('href', s.url)
                 row.append($('<td>').append(link))
-                row.append($('<td>').text(format_temp(s.air)))
-                row.append($('<td>').text(format_temp(s.surface)))
-                row.append($('<td>').text(format_distance(s.depth)))
+                //row.append($('<td>').text(format_temp(s.air)))
+                //row.append($('<td>').text(format_temp(s.surface)))
+                //row.append($('<td>').text(format_distance(s.depth)))
 
                 $('.sensor_list').append(row)
             }
@@ -44,9 +44,9 @@
         <table class='sensor_list'>
         <tr>
             <th>Sensor</th>
-            <th>Air Temp</th>
-            <th>Surface Temp</th>
-            <th>Snow Depth</th>
+            {#<th>Air Temp</th> #}
+            {#<th>Surface Temp</th> #}
+            {#<th>Snow Depth</th>#}
         </tr>
         </table>
     </body>
