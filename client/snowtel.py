@@ -2,6 +2,7 @@
 from optparse import OptionParser
 import sys
 import time
+import traceback
 from uuid import getnode
 import urllib
 import urllib2
@@ -19,7 +20,8 @@ def read(ser):
     d = {
         'ambient_temp': None,
         'surface_temp': None,
-        'snow_height': None
+        'snow_height': None,
+        'time_of_flight': None
     }
 
     try:
@@ -32,10 +34,13 @@ def read(ser):
         ser.write('d')
         l = ser.readline().strip().split()
         if len(l):
-            d['snow_height'] = safe_float(l[1]) # TODO: temp correction
+            h = safe_float(l[1])
+            if h<400:
+                d['snow_height'] = h
+                d['time_of_flight'] = safe_float(l[0])/2
     except Exception, e:
         print e
-
+        traceback.print_exc()
     return d
 
 def median(data):
@@ -98,4 +103,5 @@ if __name__ == "__main__":
                 readings = []
         except Exception,e:
             print e
+            traceback.print_exc()
         time.sleep(.25)
