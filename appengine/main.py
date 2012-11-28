@@ -34,17 +34,11 @@ class MainPage(webapp2.RequestHandler):
     def get(self):
         sensors = []
         for s in datastore.Sensor.all():
-            #cur = s.reading_set.order('-timestamp').get()
             d = {
                 'id': s.key().id_or_name(),
                 'url': '/sensor/%s/readings'%s.key().id_or_name(),
                 'name': s.location_name
                 }
-            #if cur:
-            #    d.update({'air': cur.ambient_temp,
-            #    'surface': cur.surface_temp,
-            #    'depth': cur.snow_height
-            #    })
             sensors.append(d)
         sensors_json = json.dumps(sensors)
         if self.request.get('format', None) == 'json':
@@ -61,7 +55,19 @@ def safe_float(s):
     except:
         return None
 
+def safe_int(s):
+    try:
+        return int(round(float(s)))
+    except:
+        return None
+
+def calc_distance(time_of_flight, temp):
+    if time_of_flight == None:
+        return None
+    return 100 * (time_of_flight*1e-6) * (331.4 + 0.6*temp)
+
 class SensorReadings(webapp2.RequestHandler):
+
     def _getReadings(self, sensor):
         readings_cache_key = 'r-'+sensor.key().id_or_name()
         data = memcache.get(readings_cache_key)
@@ -81,17 +87,13 @@ class SensorReadings(webapp2.RequestHandler):
                 time.mktime(r.timestamp.timetuple()),
                 r.ambient_temp,
                 r.surface_temp,
-                r.snow_height
+                r.snow_depth
             ])
         if cache_set:
             dump = zlib.compress( pickle.dumps(data, pickle.HIGHEST_PROTOCOL), 9)
             logging.info('Readings compressed size: %d'%len(dump))
             memcache.set(readings_cache_key, dump)
 
-        for r in data:
-            if r[2] and r[3]:
-                offset = sensor.snow_sensor_height*(.6/331.4)*r[2]
-                r.append(r[3] - offset)
         return data
 
     def get(self, sensor_id):
@@ -109,7 +111,12 @@ class SensorReadings(webapp2.RequestHandler):
             self.response.out.write(render_to_string('readings.djhtml', template_values))
 
     def post(self, sensor_id):
-        distance = safe_float(self.request.POST.get('snow_height', None))
+        ambient_temp = safe_float(self.request.POST.get('ambient_temp', None))
+        surface_temp = safe_float(self.request.POST.get('surface_temp', None))
+        time_of_flight = safe_int(self.request.POST.get('time_of_flight', None))
+
+        # Calculate the temp-corrected distance
+        distance = calc_distance(time_of_flight, ambient_temp)
 
         sensor_key = db.Key.from_path('Sensor', sensor_id)
         sensor = datastore.Sensor.get(sensor_key)
@@ -119,40 +126,43 @@ class SensorReadings(webapp2.RequestHandler):
                 snow_sensor_height = distance       # Pick the first reading as the height
             )
             sensor.put()
-        distance = safe_float(self.request.POST.get('snow_height', None))
-        snow_height = None
-        if distance:
-            if distance < 400:
-                snow_height = sensor.snow_sensor_height-distance
-            else:
-                logging.info("Invalid height reading: %f"%distance)
 
         reading = datastore.Reading(
             sensor = sensor,
-            ambient_temp = safe_float(self.request.POST.get('ambient_temp', None)),
-            surface_temp = safe_float(self.request.POST.get('surface_temp', None)),
-            snow_height = snow_height
+            ambient_temp = ambient_temp,
+            surface_temp = surface_temp,
+            time_of_flight = time_of_flight,
+            sensor_height = sensor.snow_sensor_height,
+            snow_depth = sensor.snow_sensor_height - distance
         )
         reading.put()
         return webapp2.Response('')
 
-class FilterSensorReadings(webapp2.RequestHandler):
+class FixSensorReadings(webapp2.RequestHandler):
     def get(self, sensor_id):
         sensor_key = db.Key.from_path('Sensor', sensor_id)
         sensor = datastore.Sensor.get(sensor_key)
         readings = sensor.reading_set.order('-timestamp')
-        max_height = safe_float(self.request.GET.get('max_height', None))
-        min_height = safe_float(self.request.GET.get('min_height', None))
+        c = 0
+        start = time.time()
         for r in readings:
-            if r.snow_height:
-                if max_height and r.snow_height > max_height :
-                    logging.info('removing %s height:%f'%(r.timestamp, r.snow_height))
-                    r.snow_height = None
-                    r.put()
-                if min_height and r.snow_height < min_height :
-                    logging.info('removing %s height:%f'%(r.timestamp, r.snow_height))
-                    r.snow_height = None
-                    r.put()
+            if r.ambient_temp==None and r.surface_temp==None and r.snow_height==None:
+                logging.info("removing: %s"%r.timestamp)
+                r.delete()
+                c+=1
+            elif r.snow_height != None:
+                logging.info("fixing: %s"%r.timestamp)
+                uncorrected_dist = sensor.snow_sensor_height-r.snow_height
+                r.time_of_flight = int(round(29*uncorrected_dist))
+                r.sensor_height = sensor.snow_sensor_height - 3.6
+                r.snow_depth = r.sensor_height - calc_distance(r.time_of_flight, r.ambient_temp)
+                r.snow_height = None
+                r.put()
+                c+=1
+            if time.time()-start >= 25:
+                break
+
+        return webapp2.Response(str(c))
 
 class MergeSensorReadings(webapp2.RequestHandler):
     def get(self, sensor_id):
@@ -172,6 +182,9 @@ class MergeSensorReadings(webapp2.RequestHandler):
             reading.ambient_temp = r.ambient_temp
             reading.surface_temp = r.surface_temp
             reading.snow_height = r.snow_height
+            reading.time_of_flight = r.time_of_flight
+            reading.sensor_height = r.sensor_height
+            reading.snow_depth = r.snow_depth
             reading.put()
             r.delete()
             c+=1
@@ -183,7 +196,7 @@ class MergeSensorReadings(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
         ('/', MainPage),
         ('/sensor/(.*)/readings', SensorReadings),
-        ('/sensor/(.*)/filter_readings', FilterSensorReadings),
+        ('/sensor/(.*)/fix', FixSensorReadings),
         ('/sensor/(.*)/merge', MergeSensorReadings),
     ],debug=True)
 

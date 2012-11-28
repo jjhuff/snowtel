@@ -34,7 +34,6 @@ function getDataTable() {
     data.addColumn('number', 'Air');
     data.addColumn('number', 'Surface');
     data.addColumn('number', 'Snow Depth');
-    data.addColumn('number', 'Snow Depth (Adj)');
 
     var depth_filter = new Filter(6)
     var adj_depth_filter = new Filter(6)
@@ -50,10 +49,6 @@ function getDataTable() {
         d = depth_filter.add(d)
         readings[i][3] = UNITS[selected_units].dist.convert(d)
 
-        // temp-corrected snow depth
-        d = readings[i][4] || 0
-        d = adj_depth_filter.add(d)
-        readings[i][4] = UNITS[selected_units].dist.convert(d)
     }
     data.addRows(readings)
     data.sort(0)
@@ -72,7 +67,6 @@ function getDataTable() {
         pattern: UNITS[selected_units].dist.format
     });
     height_formatter.format(data, 3);
-    height_formatter.format(data, 4);
 
     return data
 }
@@ -131,7 +125,7 @@ function drawVisualization() {
             'vAxis': {'format': UNITS[selected_units].dist.format},
             'series': [{'color': SNOW_HEIGHT}, {'color':SNOW_HEIGHT_ADJ}]
         },
-        'view': {'columns': [0,3,4]}
+        'view': {'columns': [0,3]}
     });
 
 

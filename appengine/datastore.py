@@ -26,5 +26,11 @@ class Reading(db.Model):
     timestamp = db.DateTimeProperty(auto_now_add=True)
     ambient_temp = db.FloatProperty()
     surface_temp = db.FloatProperty()
+
     snow_height = db.FloatProperty()
+
+    time_of_flight = db.IntegerProperty() # one way ToF in micro-sec
+    sensor_height = db.FloatProperty() # From the Sensor object when the reading is taken
+
+    snow_depth = db.FloatProperty() # Calculated snow depth
 
