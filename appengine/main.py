@@ -89,6 +89,7 @@ class SensorReadings(webapp2.RequestHandler):
                 r.surface_temp,
                 r.snow_depth
             ])
+        data = sorted(data, key=lambda r:r[0])
         if cache_set:
             dump = zlib.compress( pickle.dumps(data, pickle.HIGHEST_PROTOCOL), 9)
             logging.info('Readings compressed size: %d'%len(dump))
