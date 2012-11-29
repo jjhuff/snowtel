@@ -46,7 +46,7 @@ function getDataTable() {
 
         // Snow depth
         d = readings[i][3] || 0
-        d = depth_filter.add(d)
+        //d = depth_filter.add(d)
         readings[i][3] = UNITS[selected_units].dist.convert(d)
 
     }
@@ -55,7 +55,7 @@ function getDataTable() {
 
     // Setup formats
     var date_formatter = new google.visualization.DateFormat({
-        pattern: 'MMM d yyyy h:m aa'
+        pattern: 'MMM d yyyy hh:mm aa'
     });
     date_formatter.format(data,0);
     var temp_formatter = new google.visualization.NumberFormat({
