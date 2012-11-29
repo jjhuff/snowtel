@@ -35,22 +35,34 @@ function getDataTable() {
     data.addColumn('number', 'Surface');
     data.addColumn('number', 'Snow Depth');
 
-    var depth_filter = new Filter(6)
-    var adj_depth_filter = new Filter(6)
+    //var depth_filter = new Filter(6)
+
+    var last_dt =  new Date(readings[0][0]*1000)
     for (i in readings) {
-        readings[i][0] = new Date(readings[i][0]*1000)
+        r = readings[i]
+
+        dt = new Date(r[0]*1000)
+
+        if( (dt-last_dt)>10*60*1000 ){
+            data.addRow([new Date(r[0]*1000 - 1), null, null, null])
+        }
+        last_dt = dt
 
         // Temp readings
-        readings[i][1] = UNITS[selected_units].temp.convert(readings[i][1])
-        readings[i][2] = UNITS[selected_units].temp.convert(readings[i][2])
+        air_temp = UNITS[selected_units].temp.convert(r[1])
+        surface_temp = UNITS[selected_units].temp.convert(r[2])
 
         // Snow depth
-        d = readings[i][3] || 0
-        //d = depth_filter.add(d)
-        readings[i][3] = UNITS[selected_units].dist.convert(d)
+        d = r[3]
+        if(d!=null) {
+            //d = depth_filter.add(d)
+            snow_depth = UNITS[selected_units].dist.convert(d)
+        } else {
+            snow_depth = null
+        }
 
+        data.addRow([dt, air_temp, surface_temp, snow_depth])
     }
-    data.addRows(readings)
     data.sort(0)
 
     // Setup formats
