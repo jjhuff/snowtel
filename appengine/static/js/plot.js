@@ -58,6 +58,7 @@ function getDataTable() {
             //d = depth_filter.add(d)
             snow_depth = UNITS[selected_units].dist.convert(d)
         } else {
+            //depth_filter.add(null)
             snow_depth = null
         }
 
