@@ -12,9 +12,6 @@ function Filter(size) {
                 }
             }
 
-            if (this._values.length != size)
-                    console.log(this._values)
-
             var sum = 0
             for (var i in this._values)
                 sum += this._values[i]
