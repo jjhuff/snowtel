@@ -35,7 +35,7 @@ def read(ser):
         l = ser.readline().strip().split()
         if len(l):
             h = safe_float(l[1])
-            if h<400:
+            if h<400 and h>0:
                 d['snow_height'] = h
                 d['time_of_flight'] = safe_float(l[0])/2
     except Exception, e:
