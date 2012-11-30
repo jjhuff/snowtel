@@ -183,19 +183,26 @@ ISR(TIMER1_CAPT_vect)
     // Toggle the capture edge
     TCCR1B = tccr1b ^ (1 << ICES1);
 
-    if ((tccr1b & (1 << ICES1)))
+    if (tccr1b & (1 << ICES1))
     {
         // we caught the rising edge
         sonar_pulse_start = icr;
+        TIFR1 |= (1<<TOV1); // clear the overflow flag
     }
     else
     {
         // we caught the falling edge
-        sonar_pulse_len = (icr - sonar_pulse_start)>>1;
+        // if we overflowed, ignore the result
+        if (TIFR1 & (1<<TOV1) ) {
+            sonar_pulse_len = 0;
+        } else  {
+            sonar_pulse_len = (icr - sonar_pulse_start)>>1;
+        }
     }
 
     return;
 }
+
 
 #define MODE_READ_TEMP          't'
 #define MODE_READ_TEMP_CONT     'T'
