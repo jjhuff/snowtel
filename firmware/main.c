@@ -234,11 +234,13 @@ int main(void)
     sei();
 
     puts("READY\n");
+    wdt_enable(WDTO_8S);
     char mode = 0;
     double d;
     char buf[16];
     while(1)
     {
+        wdt_reset();
         if (uart_haschar())
         {
             mode = getchar();
@@ -279,7 +281,7 @@ int main(void)
                 break;
             case MODE_UPGRADE:
                 wdt_enable(WDTO_1S);
-                while(1);
+                while(1); //Wait for WTD to timeout
                 break;
             default:
                 mode = 0;
