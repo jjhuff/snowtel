@@ -147,23 +147,15 @@ class FixSensorReadings(webapp2.RequestHandler):
         c = 0
         start = time.time()
         for r in readings:
-            if r.ambient_temp==None and r.surface_temp==None and r.snow_height==None:
-                logging.info("removing: %s"%r.timestamp)
-                r.delete()
-                c+=1
-            elif r.snow_height != None:
-                logging.info("fixing: %s"%r.timestamp)
-                uncorrected_dist = sensor.snow_sensor_height-r.snow_height
-                r.time_of_flight = int(round(29*uncorrected_dist))
-                r.sensor_height = sensor.snow_sensor_height - 3.6
-                r.snow_depth = r.sensor_height - calc_distance(r.time_of_flight, r.ambient_temp)
-                r.snow_height = None
-                r.put()
-                c+=1
             if time.time()-start >= 25:
                 break
+            if r.snow_depth != None and r.sensor_height == 176.7:
+                c+=1
+                r.snow_depth = r.snow_depth - (176.7-163.8)
+                r.sensor_height = 163.8
+                r.put()
 
-        return webapp2.Response(str(c))
+        return webapp2.Response("%d\n"%c)
 
 class MergeSensorReadings(webapp2.RequestHandler):
     def get(self, sensor_id):
@@ -189,9 +181,9 @@ class MergeSensorReadings(webapp2.RequestHandler):
             reading.put()
             r.delete()
             c+=1
-            if time.time()-start >= 20:
+            if time.time()-start >= 25:
                 break
-        return webapp2.Response(str(c))
+        return webapp2.Response("%d\n"%c)
 
 
 app = webapp2.WSGIApplication([
