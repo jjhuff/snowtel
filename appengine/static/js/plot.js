@@ -32,7 +32,7 @@ function getDataTable() {
     var data = new google.visualization.DataTable();
     data.addColumn('datetime', 'Date');
     data.addColumn('number', 'Air');
-    data.addColumn('number', 'Surface');
+    data.addColumn('number', 'Snow Temp');
     data.addColumn('number', 'Snow Depth');
 
     //var depth_filter = new Filter(6)
@@ -88,9 +88,11 @@ function drawVisualization() {
 
     var data = getDataTable()
 
+    var DAY = 24*60*60*1000
+
     // Start at the last reading
     var stop_dt = data.getValue(data.getNumberOfRows()-1, 0)
-    var start_dt = new Date(stop_dt.getTime() - (24*60*60*1000));
+    var start_dt = new Date(stop_dt.getTime() - 2*DAY)
     var control = new google.visualization.ControlWrapper({
         'controlType': 'ChartRangeFilter',
             'containerId': 'control',
@@ -100,51 +102,40 @@ function drawVisualization() {
                 'ui': {
                     'chartType': 'LineChart',
                     'chartOptions': {
-                    'chartArea': {'width': '80%'},
-                    'hAxis': {'baselineColor': 'none'},
-                    'series': [{'color': AIR_TEMP}, {'color':SNOW_HEIGHT}] // airtemp & snow height
-                },
-                'chartView': {
-                    'columns': [0, 1, 3]
-                },
-                'minRangeSize': 60 * 60 * 1000
+                        'chartArea': {'width': '80%'},
+                        'hAxis': {'baselineColor': 'none'},
+                        'series': [{'color': SNOW_TEMP}, {'color':SNOW_HEIGHT}] // airtemp & snow height
+                    },
+                    'chartView': {
+                        'columns': [0, 2, 3]
+                    },
+                    'minRangeSize': 60 * 60 * 1000
                 }
             },
             'state': {'range': {'start': start_dt, 'end': stop_dt}}
     });
      
-    // Plot the snow temps 
-    var temp_chart = new google.visualization.ChartWrapper({
+    // Plot the snow temps and depths
+    var chart = new google.visualization.ChartWrapper({
         'chartType': 'LineChart',
-        'containerId': 'temp_chart',
+        'containerId': 'chart',
         'options': {
             // Use the same chart area width as the control for axis alignment.
-            'chartArea': {'height': '95%', 'width': '80%'},
-            'hAxis': {'textPosition': 'none'},
-            'vAxis': {'format': UNITS[selected_units].temp.format},
-            'series': [{'color': AIR_TEMP}, {'color':SNOW_TEMP}]
+            'chartArea': {'height': '80%', 'width': '80%'},
+            'hAxis': {'textPosition': 'out'},
+            'vAxes': [
+                {format: UNITS[selected_units].temp.format},
+                {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:12}
+            ],
+            'series': [
+                {targetAxisIndex: 0, color: SNOW_TEMP},
+                {targetAxisIndex: 1, color: SNOW_HEIGHT}]
         },
-       'view': {'columns': [0,1,2]}
+       'view': {'columns': [0,2,3]}
     });
-
-    // Plot the snow heights
-    var snow_chart = new google.visualization.ChartWrapper({
-        'chartType': 'LineChart',
-        'containerId': 'snow_chart',
-        'options': {
-            // Use the same chart area width as the control for axis alignment.
-            'chartArea': {'height': '95%', 'width': '80%'},
-            'hAxis': {'textPosition': 'in'},
-            'vAxis': {'format': UNITS[selected_units].dist.format},
-            'series': [{'color': SNOW_HEIGHT}, {'color':SNOW_HEIGHT_ADJ}]
-        },
-        'view': {'columns': [0,3]}
-    });
-
 
     // Fire up the dashboard
     var dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
-    dashboard.bind(control, temp_chart);
-    dashboard.bind(control, snow_chart);
+    dashboard.bind(control, chart);
     dashboard.draw(data);
 }

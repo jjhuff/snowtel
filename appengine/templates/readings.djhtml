@@ -22,8 +22,7 @@
         <h1>{{sensor.location_name}}</h1>
         <br/>
         <div id="dashboard" style='width:100%'>
-            <div id="temp_chart" style='height: 200px;'></div>
-            <div id="snow_chart" style='height: 200px;'></div>
+            <div id="chart" style='height: 300px;'></div>
             <div id="control" style='height: 50px;'></div>
         </div>
         <br/>
