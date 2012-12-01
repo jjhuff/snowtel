@@ -94,7 +94,7 @@ function drawVisualization() {
 
     // Start at the last reading
     var stop_dt = data.getValue(data.getNumberOfRows()-1, 0)
-    var start_dt = new Date(stop_dt.getTime() - 2*DAY)
+    var start_dt = new Date(stop_dt.getTime() - 7*DAY)
     var control = new google.visualization.ControlWrapper({
         'controlType': 'ChartRangeFilter',
             'containerId': 'control',
@@ -124,10 +124,11 @@ function drawVisualization() {
         'options': {
             // Use the same chart area width as the control for axis alignment.
             'chartArea': {'height': '80%', 'width': '80%'},
+            'interpolateNulls': true,
             'hAxis': {'textPosition': 'out'},
             'vAxes': [
                 {format: UNITS[selected_units].temp.format},
-                {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:12}
+                {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:40}
             ],
             'series': [
                 {targetAxisIndex: 0, color: SNOW_TEMP},
