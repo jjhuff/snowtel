@@ -20,11 +20,20 @@
     </head>
     <body>
         <h1>{{sensor.location_name}}</h1>
+        <h2>Current Conditions</h2>
+        <ul>
+            <li><b>Snow Temp</b>:&nbsp;<span id='cur_snow_temp'</span></li>
+            <li><b>Snow Depth</b>:&nbsp;<span id='cur_snow_depth'</span></li>
+        </ul>
         <br/>
         <div id="dashboard" style='width:100%'>
             <div id="chart" style='height: 300px;'></div>
             <div id="control" style='height: 50px;'></div>
         </div>
+        <br/>
+        {% if sensor.webcam_url %}
+        <img src="{{sensor.webcam_url}}">
+        {% endif %}
         <br/>
         <a href='/'>Back</a>
     </body>

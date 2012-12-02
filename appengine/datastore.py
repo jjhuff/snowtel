@@ -20,6 +20,7 @@ from google.appengine.ext import db
 class Sensor(db.Model):
     location_name = db.StringProperty(default="New Sensor")
     snow_sensor_height = db.FloatProperty(default=0.0)
+    webcam_url = db.LinkProperty(default=None)
 
 class Reading(db.Model):
     sensor = db.ReferenceProperty(Sensor, required=True)

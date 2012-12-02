@@ -30,13 +30,18 @@ from django.template.loader import render_to_string
 
 import datastore
 
+TIMESTAMP = 0
+AMBIENT_TEMP = 1
+SURFACE_TEMP = 2
+SNOW_DEPTH = 3
+
 class MainPage(webapp2.RequestHandler):
     def get(self):
         sensors = []
         for s in datastore.Sensor.all():
             d = {
                 'id': s.key().id_or_name(),
-                'url': '/sensor/%s/readings'%s.key().id_or_name(),
+                'url': '/sensor/%s'%s.key().id_or_name(),
                 'name': s.location_name
                 }
             sensors.append(d)
@@ -66,8 +71,7 @@ def calc_distance(time_of_flight, temp):
         return None
     return 100 * (time_of_flight*1e-6) * (331.4 + 0.6*temp)
 
-class SensorReadings(webapp2.RequestHandler):
-
+class SensorPage(webapp2.RequestHandler):
     def _getReadings(self, sensor):
         readings_cache_key = 'r-'+sensor.key().id_or_name()
         data = memcache.get(readings_cache_key)
@@ -102,6 +106,7 @@ class SensorReadings(webapp2.RequestHandler):
         sensor = datastore.Sensor.get(sensor_key)
         readings = self._getReadings(sensor)
         readings_json = json.dumps(readings)
+
         if self.request.get('format', None) == 'json':
             self.response.out.write(readings_json)
         else:
@@ -110,6 +115,11 @@ class SensorReadings(webapp2.RequestHandler):
                 'sensor': sensor
             }
             self.response.out.write(render_to_string('readings.djhtml', template_values))
+
+class SensorReadings(webapp2.RequestHandler):
+    def get(self, sensor_id):
+        self.response.out.write('hi')
+        self.redirect("/sensor/%s"%sensor_id)
 
     def post(self, sensor_id):
         ambient_temp = safe_float(self.request.POST.get('ambient_temp', None))
@@ -187,8 +197,9 @@ class MergeSensorReadings(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
         ('/', MainPage),
+        ('/sensor/([^/]*)', SensorPage),
         ('/sensor/(.*)/readings', SensorReadings),
-        ('/sensor/(.*)/fix', FixSensorReadings),
-        ('/sensor/(.*)/merge', MergeSensorReadings),
+        #('/sensor/(.*)/fix', FixSensorReadings),
+        #('/sensor/(.*)/merge', MergeSensorReadings),
     ],debug=True)
 

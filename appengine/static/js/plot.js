@@ -86,9 +86,20 @@ function getDataTable() {
     return data
 }
 
+function getMostRecent(data, col) {
+    for(var row=data.getNumberOfRows()-1; row>=0; row++) {
+        var v = data.getValue(row, col)
+        if (v!=null)
+            return data.getFormattedValue(row, col)
+    }
+}
+
 function drawVisualization() {
 
     var data = getDataTable()
+
+    $('#cur_snow_temp').text( getMostRecent(data, 2) )
+    $('#cur_snow_depth').text( getMostRecent(data, 3) )
 
     var DAY = 24*60*60*1000
 
