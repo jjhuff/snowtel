@@ -174,7 +174,6 @@ class MergeSensorReadings(webapp2.RequestHandler):
             reading.timestamp = r.timestamp
             reading.ambient_temp = r.ambient_temp
             reading.surface_temp = r.surface_temp
-            reading.snow_height = r.snow_height
             reading.time_of_flight = r.time_of_flight
             reading.sensor_height = r.sensor_height
             reading.snow_depth = r.snow_depth
