@@ -25,11 +25,11 @@ var UNITS = {
     imperial: {
         temp: {
             format: '##.#\u00B0F',
-            convert: function(v){ return v*1.8+32 }
+            convert: function(v){ if (v!=null) return v*1.8+32 }
         },
         dist: {
             format: '###.#in',
-            convert: function(v){ return v*0.3937 }
+            convert: function(v){ if (v!=null) return v*0.3937 }
         }
     }
 }
@@ -39,7 +39,7 @@ var selected_units = 'imperial'
 function getDataTable() {
     var data = new google.visualization.DataTable();
     data.addColumn('datetime', 'Date');
-    data.addColumn('number', 'Air');
+    data.addColumn('number', 'Air Temp');
     data.addColumn('number', 'Snow Temp');
     data.addColumn('number', 'Snow Depth');
 
@@ -106,6 +106,7 @@ function drawVisualization() {
 
     var data = getDataTable()
 
+    $('#cur_air_temp').text( getMostRecent(data, AIR_TEMP) )
     $('#cur_snow_temp').text( getMostRecent(data, SNOW_TEMP) )
     $('#cur_snow_depth').text( getMostRecent(data, SNOW_DEPTH) )
 
@@ -153,11 +154,12 @@ function drawVisualization() {
                 {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:40}
             ],
             series: [
+                {targetAxisIndex: 0, color: AIR_TEMP_COLOR},
                 {targetAxisIndex: 0, color: SNOW_TEMP_COLOR},
                 {targetAxisIndex: 1, color: SNOW_HEIGHT_COLOR}
             ]
         },
-       view: {columns: [TIMESTAMP, SNOW_TEMP, SNOW_DEPTH]}
+       view: {columns: [TIMESTAMP, AIR_TEMP, SNOW_TEMP, SNOW_DEPTH]}
     });
 
     // Fire up the dashboard

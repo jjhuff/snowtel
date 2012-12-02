@@ -9,8 +9,11 @@
         <script type='text/javascript' src='/static/js/plot.js'></script>
 
         <script type="text/javascript">
+            {% if real_data %}
             var readings = {{readings_json|safe}}
-            {#var readings = {% include "sample_data.json" %}#}
+            {% else %}
+            var readings = {% include "sample_data.json" %}
+            {% endif %}
         </script>
         <script type="text/javascript">
             google.load('visualization', '1.1', {packages: ['corechart', 'controls']});
@@ -22,6 +25,7 @@
         <h1>{{sensor.location_name}}</h1>
         <h2>Current Conditions</h2>
         <ul>
+            <li><b>Air Temp</b>:&nbsp;<span id='cur_air_temp'</span></li>
             <li><b>Snow Temp</b>:&nbsp;<span id='cur_snow_temp'</span></li>
             <li><b>Snow Depth</b>:&nbsp;<span id='cur_snow_depth'</span></li>
         </ul>

@@ -20,6 +20,7 @@ import logging
 import pickle
 import json
 import time
+import urllib2
 import zlib
 
 import webapp2
@@ -71,6 +72,15 @@ def calc_distance(time_of_flight, temp):
         return None
     return 100 * (time_of_flight*1e-6) * (331.4 + 0.6*temp)
 
+def getStationTemp(station_id):
+    url = "http://api.wunderground.com/api/fca0029770ca8fd4/conditions/q/%s.json"%station_id
+    try:
+        result = urllib2.urlopen(url)
+        data = json.loads(result.read())
+        return data.get('current_observation',{}).get('temp_c', None)
+    except urllib2.URLError, e:
+        return None
+
 class SensorPage(webapp2.RequestHandler):
     def _getReadings(self, sensor):
         readings_cache_key = 'r-'+sensor.key().id_or_name()
@@ -89,7 +99,7 @@ class SensorPage(webapp2.RequestHandler):
             cache_set = True
             data.append([
                 time.mktime(r.timestamp.timetuple()),
-                r.ambient_temp,
+                r.station_temp,
                 r.surface_temp,
                 r.snow_depth
             ])
@@ -111,6 +121,7 @@ class SensorPage(webapp2.RequestHandler):
             self.response.out.write(readings_json)
         else:
             template_values={
+                'real_data': len(readings)>1,
                 'readings_json': readings_json,
                 'sensor': sensor
             }
@@ -118,7 +129,6 @@ class SensorPage(webapp2.RequestHandler):
 
 class SensorReadings(webapp2.RequestHandler):
     def get(self, sensor_id):
-        self.response.out.write('hi')
         self.redirect("/sensor/%s"%sensor_id)
 
     def post(self, sensor_id):
@@ -138,10 +148,13 @@ class SensorReadings(webapp2.RequestHandler):
             )
             sensor.put()
 
+        station_temp = getStationTemp(sensor.station_id)
+
         reading = datastore.Reading(
             sensor = sensor,
             ambient_temp = ambient_temp,
             surface_temp = surface_temp,
+            station_temp = station_temp,
             time_of_flight = time_of_flight,
             sensor_height = sensor.snow_sensor_height,
             snow_depth = sensor.snow_sensor_height - distance

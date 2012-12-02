@@ -21,6 +21,7 @@ class Sensor(db.Model):
     location_name = db.StringProperty(default="New Sensor")
     snow_sensor_height = db.FloatProperty(default=0.0)
     webcam_url = db.LinkProperty(default=None)
+    station_id = db.StringProperty(default=None)
 
 class Reading(db.Model):
     sensor = db.ReferenceProperty(Sensor, required=True)
@@ -28,6 +29,7 @@ class Reading(db.Model):
 
     ambient_temp = db.FloatProperty()
     surface_temp = db.FloatProperty()
+    station_temp = db.FloatProperty() # Temp from weather station
 
     time_of_flight = db.IntegerProperty() # one way ToF in micro-sec
     sensor_height = db.FloatProperty() # From the Sensor object when the reading is taken
