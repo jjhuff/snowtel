@@ -1,7 +1,15 @@
-var SNOW_HEIGHT = '#F79F81'
-var SNOW_HEIGHT_ADJ = '#C79F81'
-var SNOW_TEMP = '#81F79F'
-var AIR_TEMP = '#81DAF5'
+// Constants
+
+// Columns
+var TIMESTAMP = 0
+var AIR_TEMP = 1
+var SNOW_TEMP = 2
+var SNOW_DEPTH = 3
+
+//Colors
+var SNOW_HEIGHT_COLOR = '#F79F81'
+var SNOW_TEMP_COLOR = '#81F79F'
+var AIR_TEMP_COLOR = '#81DAF5'
 
 var UNITS = {
     metric: {
@@ -42,21 +50,21 @@ function getDataTable() {
     for (i in readings) {
         r = readings[i]
 
-        dt = new Date(r[0]*1000)
+        dt = new Date(r[TIMESTAMP]*1000)
 
         if( (dt-last_dt)>10*60*1000 ){
-            data.addRow([new Date(r[0]*1000 - 1), null, null, null])
+            data.addRow([new Date(r[TIMESTAMP]*1000 - 1), null, null, null])
         }
         last_dt = dt
 
         // Temp readings
-        air_temp = UNITS[selected_units].temp.convert(r[1])
-        surface_temp = UNITS[selected_units].temp.convert(r[2])
+        air_temp = UNITS[selected_units].temp.convert(r[AIR_TEMP])
+        surface_temp = UNITS[selected_units].temp.convert(r[SNOW_TEMP])
         surface_temp = surface_temp_filter.add(surface_temp)
 
         // Snow depth
-        d = r[3]
-        if(d!=null) {
+        d = r[SNOW_DEPTH]
+        if(d!=null || d<0) {
             d = depth_filter.add(d)
             snow_depth = UNITS[selected_units].dist.convert(d)
         } else {
@@ -66,22 +74,22 @@ function getDataTable() {
 
         data.addRow([dt, air_temp, surface_temp, snow_depth])
     }
-    data.sort(0)
+    data.sort(TIMESTAMP)
 
     // Setup formats
     var date_formatter = new google.visualization.DateFormat({
         pattern: 'MMM d yyyy hh:mm aa'
     });
-    date_formatter.format(data,0);
+    date_formatter.format(data, TIMESTAMP);
     var temp_formatter = new google.visualization.NumberFormat({
         pattern: UNITS[selected_units].temp.format
     });
-    temp_formatter.format(data, 1);
-    temp_formatter.format(data, 2);
+    temp_formatter.format(data, AIR_TEMP);
+    temp_formatter.format(data, SNOW_TEMP);
     var height_formatter = new google.visualization.NumberFormat({
         pattern: UNITS[selected_units].dist.format
     });
-    height_formatter.format(data, 3);
+    height_formatter.format(data, SNOW_DEPTH);
 
     return data
 }
@@ -98,8 +106,8 @@ function drawVisualization() {
 
     var data = getDataTable()
 
-    $('#cur_snow_temp').text( getMostRecent(data, 2) )
-    $('#cur_snow_depth').text( getMostRecent(data, 3) )
+    $('#cur_snow_temp').text( getMostRecent(data, SNOW_TEMP) )
+    $('#cur_snow_depth').text( getMostRecent(data, SNOW_DEPTH) )
 
     var DAY = 24*60*60*1000
 
@@ -107,45 +115,49 @@ function drawVisualization() {
     var stop_dt = data.getValue(data.getNumberOfRows()-1, 0)
     var start_dt = new Date(stop_dt.getTime() - 7*DAY)
     var control = new google.visualization.ControlWrapper({
-        'controlType': 'ChartRangeFilter',
-            'containerId': 'control',
-            'options': {
+        controlType: 'ChartRangeFilter',
+            containerId: 'control',
+            options: {
                 // Filter by the date axis.
-                'filterColumnIndex': 0,
-                'ui': {
-                    'chartType': 'LineChart',
-                    'chartOptions': {
-                        'chartArea': {'width': '80%'},
-                        'hAxis': {'baselineColor': 'none'},
-                        'series': [{'color': SNOW_TEMP}, {'color':SNOW_HEIGHT}] // airtemp & snow height
+                filterColumnIndex: TIMESTAMP,
+                ui: {
+                    chartType: 'LineChart',
+                    chartOptions: {
+                        chartArea: {width: '80%'},
+                        hAxis: {baselineColor: 'none'},
+                        series: [
+                            {color: SNOW_TEMP_COLOR},
+                            {color:SNOW_HEIGHT_COLOR}
+                        ]
                     },
-                    'chartView': {
-                        'columns': [0, 2, 3]
+                    chartView: {
+                        columns: [TIMESTAMP, SNOW_TEMP, SNOW_DEPTH]
                     },
-                    'minRangeSize': 60 * 60 * 1000
+                    minRangeSize: 60 * 60 * 1000
                 }
             },
-            'state': {'range': {'start': start_dt, 'end': stop_dt}}
+            state: {range: {start: start_dt, end: stop_dt}}
     });
      
     // Plot the snow temps and depths
     var chart = new google.visualization.ChartWrapper({
-        'chartType': 'LineChart',
-        'containerId': 'chart',
-        'options': {
+        chartType: 'LineChart',
+        containerId: 'chart',
+        options: {
             // Use the same chart area width as the control for axis alignment.
-            'chartArea': {'height': '80%', 'width': '80%'},
-            'interpolateNulls': true,
-            'hAxis': {'textPosition': 'out'},
-            'vAxes': [
+            chartArea: {height: '80%', width: '80%'},
+            interpolateNulls: true,
+            hAxis: {textPosition: 'out'},
+            vAxes: [
                 {format: UNITS[selected_units].temp.format},
                 {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:40}
             ],
-            'series': [
-                {targetAxisIndex: 0, color: SNOW_TEMP},
-                {targetAxisIndex: 1, color: SNOW_HEIGHT}]
+            series: [
+                {targetAxisIndex: 0, color: SNOW_TEMP_COLOR},
+                {targetAxisIndex: 1, color: SNOW_HEIGHT_COLOR}
+            ]
         },
-       'view': {'columns': [0,2,3]}
+       view: {columns: [TIMESTAMP, SNOW_TEMP, SNOW_DEPTH]}
     });
 
     // Fire up the dashboard
