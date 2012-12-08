@@ -148,6 +148,11 @@ class SensorReadings(webapp2.RequestHandler):
             )
             sensor.put()
 
+        if distance:
+            snow_depth = sensor.snow_sensor_height - distance
+        else:
+            snow_depth = None
+
         station_temp = getStationTemp(sensor.station_id)
 
         reading = datastore.Reading(
@@ -157,7 +162,7 @@ class SensorReadings(webapp2.RequestHandler):
             station_temp = station_temp,
             time_of_flight = time_of_flight,
             sensor_height = sensor.snow_sensor_height,
-            snow_depth = sensor.snow_sensor_height - distance
+            snow_depth = snow_depth
         )
         reading.put()
         return webapp2.Response('')

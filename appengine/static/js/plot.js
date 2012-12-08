@@ -95,7 +95,7 @@ function getDataTable() {
 }
 
 function getMostRecent(data, col) {
-    for(var row=data.getNumberOfRows()-1; row>=0; row++) {
+    for(var row=data.getNumberOfRows()-1; row>=0; row--) {
         var v = data.getValue(row, col)
         if (v!=null)
             return data.getFormattedValue(row, col)
