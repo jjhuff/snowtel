@@ -185,6 +185,29 @@ class FixSensorReadings(webapp2.RequestHandler):
 
         return webapp2.Response("%d\n"%c)
 
+class RemoveSnowReadings(webapp2.RequestHandler):
+    def get(self, sensor_id):
+        sensor_key = db.Key.from_path('Sensor', sensor_id)
+        sensor = datastore.Sensor.get(sensor_key)
+
+        from_ts = int(self.request.GET.get('from'))
+        from_ts = datetime.datetime.fromtimestamp(from_ts)
+        to_ts = int(self.request.GET.get('to'))
+        to_ts = datetime.datetime.fromtimestamp(to_ts)
+        readings = sensor.reading_set.filter('timestamp >',from_ts).filter('timestamp <',to_ts)
+
+        c = 0
+        start = time.time()
+        for r in readings:
+            if time.time()-start >= 25:
+                break
+            r.snow_depth = None
+            r.time_of_flight = None
+            r.save()
+            c+=1
+
+        return webapp2.Response("%d\n"%c)
+
 class MergeSensorReadings(webapp2.RequestHandler):
     def get(self, sensor_id):
         sensor_key = db.Key.from_path('Sensor', sensor_id)
@@ -217,6 +240,7 @@ app = webapp2.WSGIApplication([
         ('/', MainPage),
         ('/sensor/([^/]*)', SensorPage),
         ('/sensor/(.*)/readings', SensorReadings),
+        #('/sensor/(.*)/remove', RemoveSnowReadings),
         #('/sensor/(.*)/fix', FixSensorReadings),
         #('/sensor/(.*)/merge', MergeSensorReadings),
     ],debug=True)
