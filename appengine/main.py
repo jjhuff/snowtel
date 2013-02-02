@@ -91,7 +91,8 @@ class SensorPage(webapp2.RequestHandler):
             readings = sensor.reading_set.filter('timestamp >', oldest_dt)
         else:
             data = []
-            readings = sensor.reading_set
+            limit = datetime.datetime.now() - datetime.timedelta(days=30)
+            readings = sensor.reading_set.filter('timestamp >', limit)
 
         # append any readings we need to
         cache_set = False
