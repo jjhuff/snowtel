@@ -7,6 +7,7 @@
 #include <util/delay.h>
 
 #include "i2cmaster.h"
+#include "softuart.h"
 
 #define BAUD 9600
 
@@ -229,6 +230,8 @@ int main(void)
 {
     ioinit();
     i2c_init();
+    softuart_init();
+
     _delay_ms(1000);
 
     sei();
@@ -236,6 +239,7 @@ int main(void)
     puts("READY\n");
     wdt_enable(WDTO_8S);
     char mode = 0;
+    char c;
     double d;
     char buf[16];
     while(1)
@@ -260,9 +264,19 @@ int main(void)
             case MODE_READ_DIST:
                 mode = 0;
             case MODE_READ_DIST_CONT:
-                printf("%d ", sonar_pulse_len);
+                /*printf("%d ", sonar_pulse_len);
                 d = sonar_pulse_len/58.0;
-                printf("%.1f\n", d);
+                printf("%.1f\n", d);*/
+                softuart_flush_input_buffer();
+                c=' ';
+                while(c!='R')
+                    c = softuart_getchar();
+                putchar(softuart_getchar());
+                putchar(softuart_getchar());
+                putchar(softuart_getchar());
+                putchar('.');
+                putchar(softuart_getchar());
+                putchar('\n');
                 break;
 
             case MODE_SET_EMISSIVITY:
