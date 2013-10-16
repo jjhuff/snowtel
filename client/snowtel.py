@@ -20,17 +20,17 @@ def read(ser):
     d = { }
 
     try:
-	ser.flushInput()
+        ser.flushInput()
         ser.write('t')
         l = ser.readline().strip().split()
         if len(l):
             d['surface_temp'] = safe_float(l[0])
             d['ambient_temp'] = safe_float(l[1])
 
-	ser.flushInput()
+        ser.flushInput()
         ser.write('d')
         l = ser.readline().strip().split()
-	print "D: %s"%repr(l)
+        print "D: %s"%repr(l)
         if len(l):
             h = safe_float(l[1])
             if h<400 and h>0:
