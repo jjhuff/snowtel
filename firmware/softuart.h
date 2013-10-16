@@ -3,7 +3,7 @@
     #define F_CPU 3686400UL
 #endif
 
-#define SOFTUART_BAUD_RATE      2400
+#define SOFTUART_BAUD_RATE      9600
 
 #if defined (__AVR_ATtiny25__) || defined (__AVR_ATtiny45__) || defined (__AVR_ATtiny85__)
     #define SOFTUART_RXPIN   PINB
@@ -26,7 +26,7 @@
     #define SOFTUART_CTC_MASKA         (1 << WGM01)
     #define SOFTUART_CTC_MASKB         (0)
 
-    /* "A timer interrupt must be set to interrupt at three times 
+    /* "A timer interrupt must be set to interrupt at three times
        the required baud rate." */
     #define SOFTUART_PRESCALE (8)
     // #define SOFTUART_PRESCALE (1)
@@ -37,7 +37,7 @@
     #elif (SOFTUART_PRESCALE==1)
         #define SOFTUART_PRESC_MASKA         (0)
         #define SOFTUART_PRESC_MASKB         (1 << CS00)
-    #else 
+    #else
         #error "prescale unsupported"
     #endif
 #elif defined (__AVR_ATmega324P__) || defined (__AVR_ATmega324A__)  \
@@ -45,13 +45,13 @@
    || defined (__AVR_ATmega328P__) || defined (__AVR_ATmega328PA__) \
    || defined (__AVR_ATmega164P__) || defined (__AVR_ATmega164A__)
 
-    #define SOFTUART_RXPIN   PIND
-    #define SOFTUART_RXDDR   DDRD
-    #define SOFTUART_RXBIT   PD0
+    #define SOFTUART_RXPIN   PINB
+    #define SOFTUART_RXDDR   DDRB
+    #define SOFTUART_RXBIT   PB1
 
-    #define SOFTUART_TXPORT  PORTD
-    #define SOFTUART_TXDDR   DDRD
-    #define SOFTUART_TXBIT   PD1
+    #define SOFTUART_TXPORT  PORTB
+    #define SOFTUART_TXDDR   DDRB
+    #define SOFTUART_TXBIT   PB2
 
     #define SOFTUART_T_COMP_LABEL      TIMER0_COMPA_vect
     #define SOFTUART_T_COMP_REG        OCR0A
@@ -63,7 +63,7 @@
     #define SOFTUART_CTC_MASKA         (1 << WGM01)
     #define SOFTUART_CTC_MASKB         (0)
 
-    /* "A timer interrupt must be set to interrupt at three times 
+    /* "A timer interrupt must be set to interrupt at three times
        the required baud rate." */
     #define SOFTUART_PRESCALE (8)
     // #define SOFTUART_PRESCALE (1)
@@ -74,7 +74,7 @@
     #elif (SOFTUART_PRESCALE==1)
         #define SOFTUART_PRESC_MASKA         (0)
         #define SOFTUART_PRESC_MASKB         (1 << CS00)
-    #else 
+    #else
         #error "prescale unsupported"
     #endif
 #else
@@ -87,7 +87,7 @@
     #warning "Check SOFTUART_TIMERTOP: increase prescaler, lower F_CPU or use a 16 bit timer"
 #endif
 
-#define SOFTUART_IN_BUF_SIZE     32
+#define SOFTUART_IN_BUF_SIZE     8
 
 // Init the Software Uart
 void softuart_init(void);
@@ -116,7 +116,7 @@ void softuart_turn_rx_off( void );
 // Write a NULL-terminated string from RAM to the serial port
 void softuart_puts( const char *s );
 
-// Write a NULL-terminated string from program-space (flash) 
+// Write a NULL-terminated string from program-space (flash)
 // to the serial port. example: softuart_puts_p(PSTR("test"))
 void softuart_puts_p( const char *prg_s );
 
