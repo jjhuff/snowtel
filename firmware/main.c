@@ -8,6 +8,7 @@
 
 #include "i2cmaster.h"
 #include "softuart.h"
+#include "ds18b20.h"
 
 #define BAUD 9600
 
@@ -207,6 +208,8 @@ ISR(TIMER1_CAPT_vect)
 
 #define MODE_READ_TEMP          't'
 #define MODE_READ_TEMP_CONT     'T'
+#define MODE_READ_1W_TEMP       'o'
+#define MODE_READ_1W_TEMP_CONT  'O'
 #define MODE_READ_EMISSIVITY    'e'
 #define MODE_SET_EMISSIVITY     'E'
 #define MODE_READ_DIST          'd'
@@ -260,6 +263,17 @@ int main(void)
                 d = mlx_read_temp(MLX_AMBIENT);
                 printf("%.2f\n", d);
                 break;
+
+            case MODE_READ_1W_TEMP:
+                mode = 0;
+            case MODE_READ_1W_TEMP_CONT:
+            {
+                int8_t digit;
+                uint16_t decimal;
+                therm_read_temperature(&digit, &decimal);
+                printf("%d.%04u\n", digit, decimal);
+                break;
+            }
 
             case MODE_READ_DIST:
                 mode = 0;
