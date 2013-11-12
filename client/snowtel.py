@@ -20,20 +20,20 @@ def read(ser):
     d = { }
 
     try:
-        ser.flushInput()
+	ser.flushInput()
         ser.write('t')
         l = ser.readline().strip().split()
         if len(l):
             d['surface_temp'] = safe_float(l[0])
             d['ambient_temp'] = safe_float(l[1])
 
-        ser.flushInput()
+	ser.flushInput()
         ser.write('d')
         l = ser.readline().strip().split()
-        print "D: %s"%repr(l)
+	#print "D: %s"%repr(l)
         if len(l):
             h = safe_float(l[1])
-            if h<400 and h>0:
+            if h<200 and h>0:
                 d['snow_height'] = h
                 d['time_of_flight'] = safe_float(l[0])/2
     except Exception, e:
@@ -55,9 +55,10 @@ def calc_medians(data):
             medians.setdefault(k,[]).append(v)
 
     for k,v in medians.items():
-        v = median(v)
-        if v != None:
-            medians[k] = v
+        m = median(v)
+	print "%s: len:%d median:%d"%(k, len(v), m)
+        if m != None and len(v)>=30:
+            medians[k] = m
         else:
             del medians[k]
 
@@ -96,6 +97,7 @@ if __name__ == "__main__":
                 last_report = time.time()
                 m = calc_medians(readings)
                 print '\t'.join('%s: %.1f'%x for x in m.iteritems())
+		print
                 sys.stdout.flush()
                 ret = urllib2.urlopen(server_url, urllib.urlencode(m));
                 readings = []
