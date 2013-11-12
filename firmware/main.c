@@ -288,8 +288,11 @@ int main(void)
                 putchar(softuart_getchar());
                 putchar(softuart_getchar());
                 putchar(softuart_getchar());
-                putchar('.');
-                putchar(softuart_getchar());
+                c = softuart_getchar();
+                if (c != '\r') {
+                    putchar('.');
+                    putchar(c);
+                }
                 putchar('\n');
                 break;
 

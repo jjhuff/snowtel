@@ -7,7 +7,7 @@
 //
 // Adapted to AVR using avr-gcc and avr-libc
 // by Martin Thomas, Kaiserslautern, Germany
-// <eversmith@heizung-thomas.de> 
+// <eversmith@heizung-thomas.de>
 // http://www.siwawi.arubi.uni-kl.de/avr_projects
 //
 // AVR-port Version 0.4  10/2010
@@ -60,7 +60,7 @@
 //
 // ---------------------------------------------------------------------
 
-/* 
+/*
 Remarks by Martin Thomas (avr-gcc/avr-libc):
 V0.1 (2/2005)
 - stdio.h not used
@@ -81,7 +81,7 @@ V0.2 (3/2007)
 - added softuart_can_transmit()
 - Makefile based on template from WinAVR 1/2007
 - reformated
-- extended demo-application to show various methods to 
+- extended demo-application to show various methods to
   send a string from flash and RAM
 - demonstrate usage of avr-libc's stdio in demo-applcation
 - tested with ATmega644 @ 3,6864MHz system-clock using
@@ -162,22 +162,28 @@ volatile static unsigned char  timer_tx_ctr;
 volatile static unsigned char  bits_left_in_tx;
 volatile static unsigned short internal_tx_buffer; /* ! mt: was type uchar - this was wrong */
 
-#define set_tx_pin_high()      ( SOFTUART_TXPORT |=  ( 1 << SOFTUART_TXBIT ) )
-#define set_tx_pin_low()       ( SOFTUART_TXPORT &= ~( 1 << SOFTUART_TXBIT ) )
-#define get_rx_pin_status()    ( SOFTUART_RXPIN  &   ( 1 << SOFTUART_RXBIT ) )
+#ifdef SOFTUART_INVERTED
+#  define set_tx_pin_high()      ( SOFTUART_TXPORT &= ~( 1 << SOFTUART_TXBIT ) )
+#  define set_tx_pin_low()       ( SOFTUART_TXPORT |=  ( 1 << SOFTUART_TXBIT ) )
+#  define get_rx_pin_status()    ( !(SOFTUART_RXPIN  &   ( 1 << SOFTUART_RXBIT )) )
+#else
+#  define set_tx_pin_high()      ( SOFTUART_TXPORT |=  ( 1 << SOFTUART_TXBIT ) )
+#  define set_tx_pin_low()       ( SOFTUART_TXPORT &= ~( 1 << SOFTUART_TXBIT ) )
+#  define get_rx_pin_status()    ( SOFTUART_RXPIN  &   ( 1 << SOFTUART_RXBIT ) )
+#endif
 
 ISR(SOFTUART_T_COMP_LABEL)
 {
 	static unsigned char flag_rx_waiting_for_stop_bit = SU_FALSE;
 	static unsigned char rx_mask;
-	
+
 	static unsigned char timer_rx_ctr;
 	static unsigned char bits_left_in_rx;
 	static unsigned char internal_rx_buffer;
-	
+
 	unsigned char start_bit, flag_in;
 	unsigned char tmp;
-	
+
 	// Transmitter Section
 	if ( flag_tx_busy == SU_TRUE ) {
 		tmp = timer_tx_ctr;
@@ -253,10 +259,10 @@ static void io_init(void)
 static void timer_init(void)
 {
 	unsigned char sreg_tmp;
-	
+
 	sreg_tmp = SREG;
 	cli();
-	
+
 	SOFTUART_T_COMP_REG = SOFTUART_TIMERTOP;     /* set top */
 
 	SOFTUART_T_CONTR_REGA = SOFTUART_CTC_MASKA | SOFTUART_PRESC_MASKA;
@@ -265,7 +271,7 @@ static void timer_init(void)
 	SOFTUART_T_INTCTL_REG |= SOFTUART_CMPINT_EN_MASK;
 
 	SOFTUART_T_CNT_REG = 0; /* reset counter */
-	
+
 	SREG = sreg_tmp;
 }
 
@@ -274,7 +280,7 @@ void softuart_init( void )
 	flag_tx_busy  = SU_FALSE;
 	flag_rx_ready = SU_FALSE;
 	flag_rx_off   = SU_FALSE;
-	
+
 	set_tx_pin_high(); /* mt: set to high to avoid garbage on init */
 
 	io_init();
@@ -283,7 +289,7 @@ void softuart_init( void )
 
 static void idle(void)
 {
-	// timeout handling goes here 
+	// timeout handling goes here
 	// - but there is a "softuart_kbhit" in this code...
 	// add watchdog-reset here if needed
 }
@@ -309,7 +315,7 @@ char softuart_getchar( void )
 	if ( ++qout >= SOFTUART_IN_BUF_SIZE ) {
 		qout = 0;
 	}
-	
+
 	return( ch );
 }
 
@@ -323,8 +329,8 @@ void softuart_flush_input_buffer( void )
 	qin  = 0;
 	qout = 0;
 }
-	
-unsigned char softuart_transmit_busy( void ) 
+
+unsigned char softuart_transmit_busy( void )
 {
 	return ( flag_tx_busy == SU_TRUE ) ? 1 : 0;
 }
@@ -342,14 +348,14 @@ void softuart_putchar( const char ch )
 	internal_tx_buffer = ( ch << 1 ) | 0x200;
 	flag_tx_busy       = SU_TRUE;
 }
-	
+
 void softuart_puts( const char *s )
 {
 	while ( *s ) {
 		softuart_putchar( *s++ );
 	}
 }
-	
+
 void softuart_puts_p( const char *prg_s )
 {
 	char c;
