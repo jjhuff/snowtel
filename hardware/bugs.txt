@@ -1,0 +1,12 @@
+Sensor board:
+    0. Add version to silkscreen
+    1. X1 and C1/C2 are too close
+    2. X1 keepout/silkscreen too small
+    3. Investigate smaller C1/C2
+    4. P1/P2 holes too small
+    5. J1 mounting holes a little too close
+    6. U2 holes could be closer to match T-92
+    7. P1 and C3 are too close
+    8. rotate U2 180deg
+    9. Add a 4.7k pullup on the 1-wire line
+    10. Add a pad for reset so that it's easy to so ICSP
