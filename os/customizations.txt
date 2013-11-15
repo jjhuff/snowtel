@@ -1,0 +1,28 @@
+* rpi-update
+* apt-get update
+* apt-get -y install vim i2c-tools python-smbus python-dev  python-setuptools python-pip
+* apt-get -y install avahi-autoipd avahi-daemon avahi-utils wireless-tools screen owserver owfs-fuse
+* pip install pyserial
+* pip install pyowfs
+* Enable serial (http://elinux.org/RPi_Serial_Connection#Preventing_Linux_using_the_serial_port)
+* Edit /etc/modules
+    a. i2c-dev
+* Edit /etc/modprobe.d/raspi-blacklist.conf
+    a. Comment out the spi and i2c blacklists
+* Setup Networking (/etc/network/interfaces)
+    auto eth0
+    iface eth0 inet static
+        address 192.168.0.34
+        netmask 255.255.255.0
+
+    auto wlan1
+    iface wlan1 inet dhcp
+        wpa-ssid kaiser
+        wpa-psk kaiserdog
+* Update /etc/rc.local
+    su -l pi -c "./run.sh"
+    su -l pi -c "screen -dmS tunnel ./tunnel.sh"
+    
+
+TODO:
+* DHCP first, then static

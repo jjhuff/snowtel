@@ -9,6 +9,7 @@ import urllib2
 
 import serial
 
+enclosure_sensor = ''
 
 def safe_float(s):
     try:
@@ -16,26 +17,35 @@ def safe_float(s):
     except ValueError:
         return None
 
-def read(ser):
+def read_data(ser):
     d = { }
 
     try:
-	ser.flushInput()
+        ser.flushInput()
         ser.write('t')
         l = ser.readline().strip().split()
         if len(l):
             d['surface_temp'] = safe_float(l[0])
             d['ambient_temp'] = safe_float(l[1])
 
-	ser.flushInput()
+        ser.flushInput()
         ser.write('d')
         l = ser.readline().strip().split()
-	#print "D: %s"%repr(l)
+        #print "D: %s"%repr(l)
         if len(l):
-            h = safe_float(l[1])
-            if h<200 and h>0:
-                d['snow_height'] = h
-                d['time_of_flight'] = safe_float(l[0])/2
+            h = safe_float(l[0])
+            if h<500:
+                d['snow_dist'] = h
+
+        ser.flushInput()
+        ser.write('o')
+        l = ser.readline().strip().split()
+        if len(l):
+            d['head_temp'] = safe_float(l[0])
+
+        temp = open('/mnt/1wire/uncached/%s/temperature'%enclosure_sensor).read()
+        d['enclosure_temp'] = safe_float(temp)
+
     except Exception, e:
         print e
         traceback.print_exc()
@@ -56,7 +66,7 @@ def calc_medians(data):
 
     for k,v in medians.items():
         m = median(v)
-	print "%s: len:%d median:%d"%(k, len(v), m)
+        print "%s: len:%d median:%.1f"%(k, len(v), m)
         if m != None and len(v)>=30:
             medians[k] = m
         else:
@@ -74,6 +84,8 @@ if __name__ == "__main__":
                       help="Server to talk to")
     parser.add_option("-s", "--server", dest="server", default="methowsnow.appspot.com",
                       help="Server to talk to")
+    parser.add_option("-e", "--enclosure", dest="enclosure", default="",
+                      help="Enclosure 1wire sensor")
     parser.add_option("-r", "--rate", dest="rate", default=10,
                     help="How often to send data to the server")
     parser.add_option("-p", "--port", dest="port", default="/dev/ttyUSB0",
@@ -85,19 +97,22 @@ if __name__ == "__main__":
 
     server_url = 'http://%s/sensor/%s/readings'%(options.server, options.sensor_id)
 
+    enclosure_sensor = options.enclosure
+
     readings = []
     report_interval = int(options.rate)
     last_report = time.time()
 
     while True:
         try:
-            d = read(ser);
+            d = read_data(ser);
+            #print d
             readings.append(d);
             if time.time() - last_report > report_interval:
                 last_report = time.time()
                 m = calc_medians(readings)
                 print '\t'.join('%s: %.1f'%x for x in m.iteritems())
-		print
+                print
                 sys.stdout.flush()
                 ret = urllib2.urlopen(server_url, urllib.urlencode(m));
                 readings = []
