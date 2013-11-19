@@ -27,12 +27,12 @@ class Reading(db.Model):
     sensor = db.ReferenceProperty(Sensor, required=True)
     timestamp = db.DateTimeProperty(auto_now_add=True)
 
-    ambient_temp = db.FloatProperty()
-    surface_temp = db.FloatProperty()
-    station_temp = db.FloatProperty() # Temp from weather station
+    ambient_temp = db.FloatProperty()       # Snow sensor ambient temp (as reported by the IR sensor)
+    surface_temp = db.FloatProperty()       # Ground/snow temp
+    head_temp =  db.FloatProperty()         # Temp in the snow sensor head
+    enclosure_temp =  db.FloatProperty()    # Temp in the RasberryPi enclosure
 
-    time_of_flight = db.IntegerProperty() # one way ToF in micro-sec
-    sensor_height = db.FloatProperty() # From the Sensor object when the reading is taken
+    station_temp = db.FloatProperty()       # Temp from weather station
 
-    snow_depth = db.FloatProperty() # Calculated snow depth
+    snow_depth = db.FloatProperty()         # Calculated snow depth
 

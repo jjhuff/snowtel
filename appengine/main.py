@@ -67,11 +67,6 @@ def safe_int(s):
     except:
         return None
 
-def calc_distance(time_of_flight, temp):
-    if time_of_flight == None:
-        return None
-    return 100 * (time_of_flight*1e-6) * (331.4 + 0.6*temp)
-
 def getStationTemp(station_id):
     url = "http://api.wunderground.com/api/fca0029770ca8fd4/conditions/q/%s.json"%station_id
     try:
@@ -100,7 +95,8 @@ class SensorPage(webapp2.RequestHandler):
             cache_set = True
             data.append([
                 time.mktime(r.timestamp.timetuple()),
-                r.station_temp,
+                #r.station_temp,
+                r.ambient_temp,
                 r.surface_temp,
                 r.snow_depth
             ])
@@ -133,116 +129,47 @@ class SensorReadings(webapp2.RequestHandler):
         self.redirect("/sensor/%s"%sensor_id)
 
     def post(self, sensor_id):
-        ambient_temp = safe_float(self.request.POST.get('ambient_temp', None))
-        surface_temp = safe_float(self.request.POST.get('surface_temp', None))
-        time_of_flight = safe_int(self.request.POST.get('time_of_flight', None))
-
-        # Calculate the temp-corrected distance
-        distance = calc_distance(time_of_flight, ambient_temp)
+        ambient_temp =   safe_float(self.request.POST.get('ambient_temp',   None))
+        surface_temp =   safe_float(self.request.POST.get('surface_temp',   None))
+        head_temp =      safe_float(self.request.POST.get('head_temp',      None))
+        enclosure_temp = safe_float(self.request.POST.get('enclosure_temp', None))
+        snow_dist =      safe_float(self.request.POST.get('snow_dist',      None))
 
         sensor_key = db.Key.from_path('Sensor', sensor_id)
         sensor = datastore.Sensor.get(sensor_key)
         if not sensor:
             sensor = datastore.Sensor(
                 key_name = sensor_id,
-                snow_sensor_height = distance       # Pick the first reading as the height
+                snow_sensor_height = snow_dist       # Pick the first reading as the height
             )
             sensor.put()
 
-        if distance:
-            snow_depth = sensor.snow_sensor_height - distance
+        if snow_dist:
+            snow_depth = sensor.snow_sensor_height - snow_dist
         else:
             snow_depth = None
 
-        station_temp = getStationTemp(sensor.station_id)
+        if sensor.station_id:
+            station_temp = getStationTemp(sensor.station_id)
+        else:
+            station_temp = None
 
         reading = datastore.Reading(
             sensor = sensor,
             ambient_temp = ambient_temp,
             surface_temp = surface_temp,
             station_temp = station_temp,
-            time_of_flight = time_of_flight,
-            sensor_height = sensor.snow_sensor_height,
+            head_temp = head_temp,
+            enclosure_temp = enclosure_temp,
             snow_depth = snow_depth
         )
         reading.put()
         return webapp2.Response('')
-
-class FixSensorReadings(webapp2.RequestHandler):
-    def get(self, sensor_id):
-        sensor_key = db.Key.from_path('Sensor', sensor_id)
-        sensor = datastore.Sensor.get(sensor_key)
-        readings = sensor.reading_set.order('-timestamp')
-        c = 0
-        start = time.time()
-        for r in readings:
-            if time.time()-start >= 25:
-                break
-            if r.snow_depth != None and r.sensor_height == 176.7:
-                c+=1
-                r.snow_depth = r.snow_depth - (176.7-163.8)
-                r.sensor_height = 163.8
-                r.put()
-
-        return webapp2.Response("%d\n"%c)
-
-class RemoveSnowReadings(webapp2.RequestHandler):
-    def get(self, sensor_id):
-        sensor_key = db.Key.from_path('Sensor', sensor_id)
-        sensor = datastore.Sensor.get(sensor_key)
-
-        from_ts = int(self.request.GET.get('from'))
-        from_ts = datetime.datetime.fromtimestamp(from_ts)
-        to_ts = int(self.request.GET.get('to'))
-        to_ts = datetime.datetime.fromtimestamp(to_ts)
-        readings = sensor.reading_set.filter('timestamp >',from_ts).filter('timestamp <',to_ts)
-
-        c = 0
-        start = time.time()
-        for r in readings:
-            if time.time()-start >= 25:
-                break
-            r.snow_depth = None
-            r.time_of_flight = None
-            r.save()
-            c+=1
-
-        return webapp2.Response("%d\n"%c)
-
-class MergeSensorReadings(webapp2.RequestHandler):
-    def get(self, sensor_id):
-        sensor_key = db.Key.from_path('Sensor', sensor_id)
-        sensor = datastore.Sensor.get(sensor_key)
-
-        from_id = self.request.GET.get('from')
-        from_sensor = datastore.Sensor.get( db.Key.from_path('Sensor', from_id))
-        from_readings = from_sensor.reading_set.order('-timestamp')
-
-        c = 0
-        start = time.time()
-        for r in from_readings:
-            logging.info("merging: %s"%r.timestamp)
-            reading = datastore.Reading(sensor = sensor)
-            reading.timestamp = r.timestamp
-            reading.ambient_temp = r.ambient_temp
-            reading.surface_temp = r.surface_temp
-            reading.time_of_flight = r.time_of_flight
-            reading.sensor_height = r.sensor_height
-            reading.snow_depth = r.snow_depth
-            reading.put()
-            r.delete()
-            c+=1
-            if time.time()-start >= 25:
-                break
-        return webapp2.Response("%d\n"%c)
 
 
 app = webapp2.WSGIApplication([
         ('/', MainPage),
         ('/sensor/([^/]*)', SensorPage),
         ('/sensor/(.*)/readings', SensorReadings),
-        #('/sensor/(.*)/remove', RemoveSnowReadings),
-        #('/sensor/(.*)/fix', FixSensorReadings),
-        #('/sensor/(.*)/merge', MergeSensorReadings),
     ],debug=True)
 
