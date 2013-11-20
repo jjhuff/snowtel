@@ -21,7 +21,7 @@
 //#include <stdlib.h>
 //#include <avr/pgmspace.h>
 
-void therm_read_temperature(int8_t *digit_part,  uint16_t *decimal_part);
+double therm_read_temperature(void);
 
 /* Thermometer Connections (At your choice) */
 #define THERM_PORT           PORTD

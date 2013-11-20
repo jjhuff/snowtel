@@ -268,10 +268,8 @@ int main(void)
                 mode = 0;
             case MODE_READ_1W_TEMP_CONT:
             {
-                int8_t digit;
-                uint16_t decimal;
-                therm_read_temperature(&digit, &decimal);
-                printf("%d.%04u\n", digit, decimal);
+                d = therm_read_temperature();
+                printf("%.2f\n", d);
                 break;
             }
 
