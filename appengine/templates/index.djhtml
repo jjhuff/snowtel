@@ -3,7 +3,7 @@
         <meta http-equiv="refresh" content="60">
         <style>
             th,td {
-               width: 100px;
+               width: 200px;
                text-align: left;
             }
         </style>
