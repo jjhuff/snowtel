@@ -60,17 +60,17 @@ function getDataTable() {
         // Temp readings
         air_temp = UNITS[selected_units].temp.convert(r[AIR_TEMP])
         surface_temp = UNITS[selected_units].temp.convert(r[SNOW_TEMP])
-        surface_temp = surface_temp_filter.add(surface_temp)
+        //surface_temp = surface_temp_filter.add(surface_temp)
 
         // Snow depth
         d = r[SNOW_DEPTH]
-        if(d>0) {
-            d = depth_filter.add(d)
+        //if(d>0) {
+            //d = depth_filter.add(d)
             snow_depth = UNITS[selected_units].dist.convert(d)
-        } else {
+        /*} else {
             depth_filter.add(null)
             snow_depth = null
-        }
+        }*/
 
         data.addRow([dt, air_temp, surface_temp, snow_depth])
     }
@@ -151,7 +151,7 @@ function drawVisualization() {
             hAxis: {textPosition: 'out'},
             vAxes: [
                 {format: UNITS[selected_units].temp.format},
-                {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:40}
+                {format: UNITS[selected_units].dist.format}, //minValue: 0, maxValue:40}
             ],
             series: [
                 {targetAxisIndex: 0, color: AIR_TEMP_COLOR},
