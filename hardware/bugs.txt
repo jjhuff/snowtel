@@ -10,3 +10,13 @@ Sensor board:
     8. rotate U2 180deg
     9. Add a 4.7k pullup on the 1-wire line
     10. Add a pad for reset so that it's easy to so ICSP
+
+
+RaspverryPi Interface:
+    0. Add version to silkscreen
+    1. Consider notching out so the board can sit lower (no need for extended height 36pin headers)
+    2. 1-wire chip isn't supported
+    3. 3.3v regulator pinout isn't right for the LTC1117 (silkscreen and pin 1 are revesed
+    4. 5v regulator isn't right for the traco module
+    5. Rotate/move the 5v connector so that it lines up with the RPIs ethernet connector
+    6. Maybe just used the UBEC, and assume 5v input?
