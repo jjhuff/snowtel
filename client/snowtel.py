@@ -43,8 +43,12 @@ def read_data(ser):
         if len(l):
             d['head_temp'] = safe_float(l[0])
 
-        temp = open('/mnt/1wire/uncached/%s/temperature'%enclosure_sensor).read()
-        d['enclosure_temp'] = safe_float(temp)
+        if enclosure_sensor:
+            try:
+                temp = open('/mnt/1wire/uncached/%s/temperature'%enclosure_sensor).read()
+                d['enclosure_temp'] = safe_float(temp)
+            except IOError:
+                pass
 
     except Exception, e:
         print e
