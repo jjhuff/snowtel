@@ -93,10 +93,13 @@ class SensorPage(webapp2.RequestHandler):
         cache_set = False
         for r in readings.order('-timestamp'):
             cache_set = True
+            if r.station_temp:
+                air_temp = r.station_temp
+            else:
+                air_temp = r.ambient_temp
             data.append([
                 time.mktime(r.timestamp.timetuple()),
-                #r.station_temp,
-                r.ambient_temp,
+                air_temp,
                 r.surface_temp,
                 r.snow_depth
             ])
@@ -209,7 +212,7 @@ app = webapp2.WSGIApplication([
         ('/', MainPage),
         ('/sensor/([^/]*)', SensorPage),
         ('/sensor/(.*)/readings', SensorReadings),
-        ('/sensor/(.*)/remove', RemoveSnowReadings),
-        ('/sensor/(.*)/fix', FixSensorReadings),
+        #('/sensor/(.*)/remove', RemoveSnowReadings),
+        #('/sensor/(.*)/fix', FixSensorReadings),
     ],debug=True)
 
