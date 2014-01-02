@@ -1,0 +1,5 @@
+application: methowsnow
+dispatch:
+  - url: "*/export/*"
+    module: batch
+
