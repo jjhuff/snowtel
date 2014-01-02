@@ -28,6 +28,7 @@
             <li><b>Air Temp</b>:&nbsp;<span id='cur_air_temp'</span></li>
             <li><b>Snow Temp</b>:&nbsp;<span id='cur_snow_temp'</span></li>
             <li><b>Snow Depth</b>:&nbsp;<span id='cur_snow_depth'</span></li>
+            <li><b>Updated</b>:&nbsp;<span id='last_update'</span></li>
         </ul>
         <br/>
         <div id="dashboard" style='width:100%'>

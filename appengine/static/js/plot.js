@@ -109,6 +109,7 @@ function drawVisualization() {
     $('#cur_air_temp').text( getMostRecent(data, AIR_TEMP) )
     $('#cur_snow_temp').text( getMostRecent(data, SNOW_TEMP) )
     $('#cur_snow_depth').text( getMostRecent(data, SNOW_DEPTH) )
+    $('#last_update').text( getMostRecent(data, TIMESTAMP) )
 
     var DAY = 24*60*60*1000
 
