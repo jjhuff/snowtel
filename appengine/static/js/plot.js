@@ -152,7 +152,7 @@ function drawVisualization() {
             hAxis: {textPosition: 'out'},
             vAxes: [
                 {format: UNITS[selected_units].temp.format},
-                {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:10}
+                {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:20}
             ],
             series: [
                 {targetAxisIndex: 0, color: AIR_TEMP_COLOR},
