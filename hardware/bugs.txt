@@ -8,8 +8,9 @@ Sensor board:
     6. U2 holes could be closer to match T-92
     7. P1 and C3 are too close
     8. rotate U2 180deg
-    9. Add a 4.7k pullup on the 1-wire line
-    10. Add a pad for reset so that it's easy to so ICSP
+    9. Add a 4.7k pullup on the 1-wire line [done]
+    10. Add a pad for reset so that it's easy to so ICSP [done]
+    11. Change sonar to 5v
 
 
 RaspverryPi Interface:
