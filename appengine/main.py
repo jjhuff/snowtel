@@ -169,7 +169,7 @@ class SensorReadings(webapp2.RequestHandler):
         reading.put()
         return webapp2.Response('')
 
-class RemoveSnowReadings(webapp2.RequestHandler):
+class RemoveReadings(webapp2.RequestHandler):
     def get(self, sensor_id):
         sensor_key = db.Key.from_path('Sensor', sensor_id)
         sensor = datastore.Sensor.get(sensor_key)
@@ -185,8 +185,7 @@ class RemoveSnowReadings(webapp2.RequestHandler):
         for r in readings:
             if time.time()-start >= 25:
                 break
-            r.snow_depth = None
-            r.save()
+            r.delete()
             c+=1
 
         return webapp2.Response("%d\n"%c)
@@ -212,7 +211,7 @@ app = webapp2.WSGIApplication([
         ('/', MainPage),
         ('/sensor/([^/]*)', SensorPage),
         ('/sensor/(.*)/readings', SensorReadings),
-        #('/sensor/(.*)/remove', RemoveSnowReadings),
+        ('/sensor/(.*)/remove', RemoveReadings),
         #('/sensor/(.*)/fix', FixSensorReadings),
     ],debug=True)
 
