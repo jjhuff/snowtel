@@ -1,3 +1,4 @@
+# firmware
 *.eep
 *.elf
 *.hex
@@ -5,8 +6,22 @@
 *.lst
 *.map
 *.o
-*.swp
 *.sym
 .dep/
 
 *.pyc
+
+
+#vim swap files
+.*.swp
+
+# Ignore Mercurial files pulled down by go get
+.hg
+
+pkg
+bin
+.sass-cache
+node_modules
+
+os/entire_disk.img.bz2
+
