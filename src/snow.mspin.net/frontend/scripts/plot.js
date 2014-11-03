@@ -1,40 +1,40 @@
 // Constants
 
 // Columns
-var TIMESTAMP = 0
-var AIR_TEMP = 1
-var SNOW_TEMP = 2
-var SNOW_DEPTH = 3
+var TIMESTAMP = 0;
+var AIR_TEMP = 1;
+var SNOW_TEMP = 2;
+var SNOW_DEPTH = 3;
 
 //Colors
-var SNOW_HEIGHT_COLOR = '#F79F81'
-var SNOW_TEMP_COLOR = '#81F79F'
-var AIR_TEMP_COLOR = '#81DAF5'
+var SNOW_HEIGHT_COLOR = '#F79F81';
+var SNOW_TEMP_COLOR = '#81F79F';
+var AIR_TEMP_COLOR = '#81DAF5';
 
 var UNITS = {
     metric: {
         temp: {
             format: '##.#\u00B0C',
-            convert: function(v){ return v }
+            convert: function(v){ return v; }
         },
         dist: {
             format: '###.#cm',
-            convert: function(v){ return v }
+            convert: function(v){ return v; }
         }
     },
     imperial: {
         temp: {
             format: '##.#\u00B0F',
-            convert: function(v){ if (v!=null) return v*1.8+32 }
+            convert: function(v){ if (v!=null) return v*1.8+32; }
         },
         dist: {
             format: '###.#in',
-            convert: function(v){ if (v!=null) return v*0.3937 }
+            convert: function(v){ if (v!=null) return v*0.3937; }
         }
     }
 }
 
-var selected_units = 'imperial'
+var selected_units = 'imperial';
 
 function getDataTable(readings) {
     var data = new google.visualization.DataTable();
@@ -43,38 +43,39 @@ function getDataTable(readings) {
     data.addColumn('number', 'Snow Temp');
     data.addColumn('number', 'Snow Depth');
 
-    var depth_filter = new Filter(4)
-    var surface_temp_filter = new Filter(4)
+    var depth_filter = new Filter(4);
+    var surface_temp_filter = new Filter(4);
 
-    var last_dt =  new Date(readings[0].timestamp)
+    var last_dt =  new Date(readings[0].timestamp);
     for (var i=0; i<readings.length; i++) {
-        r = readings[i]
+        var r = readings[i];
 
-        dt = new Date(r.timestamp)
+        var dt = new Date(r.timestamp);
 
         if( (dt-last_dt)>10*60*1000 ){
-            data.addRow([new Date(dt.getTime()-1), null, null, null])
+            data.addRow([new Date(dt.getTime()-1), null, null, null]);
         }
-        last_dt = dt
+        var last_dt = dt;
 
         // Temp readings
-        air_temp = UNITS[selected_units].temp.convert(r.ambient_temp)
-        surface_temp = UNITS[selected_units].temp.convert(r.surface_temp)
-        surface_temp = surface_temp_filter.add(surface_temp)
+        var air_temp = UNITS[selected_units].temp.convert(r.ambient_temp);
+        var surface_temp = UNITS[selected_units].temp.convert(r.surface_temp);
+        var surface_temp = surface_temp_filter.add(surface_temp);
 
         // Snow depth
-        d = r.snow_depth
+        var d = r.snow_depth;
+        var snow_depth;
         if(d>0) {
-            d = depth_filter.add(d)
-            snow_depth = UNITS[selected_units].dist.convert(d)
+            d = depth_filter.add(d);
+            snow_depth = UNITS[selected_units].dist.convert(d);
         } else {
-            depth_filter.add(null)
-            snow_depth = null
+            depth_filter.add(null);
+            snow_depth = null;
         }
 
-        data.addRow([dt, air_temp, surface_temp, snow_depth])
+        data.addRow([dt, air_temp, surface_temp, snow_depth]);
     }
-    data.sort(TIMESTAMP)
+    data.sort(TIMESTAMP);
 
     // Setup formats
     var date_formatter = new google.visualization.DateFormat({
@@ -91,18 +92,18 @@ function getDataTable(readings) {
     });
     height_formatter.format(data, SNOW_DEPTH);
 
-    return data
+    return data;
 }
 
 function drawVisualization(readings) {
 
-    var data = getDataTable(readings)
+    var data = getDataTable(readings);
 
-    var DAY = 24*60*60*1000
+    var DAY = 24*60*60*1000;
 
     // Start at the last reading
-    var stop_dt = data.getValue(data.getNumberOfRows()-1, TIMESTAMP)
-    var start_dt = new Date(stop_dt.getTime() - 7*DAY)
+    var stop_dt = data.getValue(data.getNumberOfRows()-1, TIMESTAMP);
+    var start_dt = new Date(stop_dt.getTime() - 7*DAY);
     var control = new google.visualization.ControlWrapper({
         controlType: 'ChartRangeFilter',
             containerId: 'control',

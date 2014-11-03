@@ -4,19 +4,20 @@ function Filter(size) {
 
         add: function(val) {
             if( val != null ) {
-                if( this._values.push(val) > size)
-                    this._values.shift()
+                if( this._values.push(val) > size) {
+                    this._values.shift();
+                }
             } else {
                 if( this._values.length > 0 ) {
-                    this._values.shift()
+                    this._values.shift();
                 }
             }
 
-            var sum = 0
-            for (var i in this._values)
-                sum += this._values[i]
-
-            return sum/this._values.length
+            var sum = 0;
+            for (var i in this._values) {
+                sum += this._values[i];
+            }
+            return sum/this._values.length;
         }
     }
 }
