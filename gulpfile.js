@@ -138,7 +138,7 @@ gulp.task('server', ['watch'], function(){
 });
 
 gulp.task('deploy', ['build'], function(){
-    var appcfg = 'appcfg.py --oauth2 ';
+    var appcfg = 'appcfg.py --oauth2 -A methowsnow ';
     gulp.src('').pipe(shell([
         //appcfg + 'update_cron ' + paths.ae_extra,
         appcfg + 'update ' + paths.ae_yaml.frontend.join(' '),
