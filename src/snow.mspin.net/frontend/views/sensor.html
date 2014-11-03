@@ -1,15 +1,16 @@
 <div ng-controller="SensorCtrl" class="sensor">
-    <h1>{{sensor.name}}</h1>
-    <h2>Current Conditions</h2>
-    <ul>
-        <li><b>Air Temp</b>:&nbsp;{{current.head_temp}}</li>
-        <li><b>Snow Temp</b>:&nbsp;{{current.surface_temp}}</li>
-        <li><b>Snow Depth</b>:&nbsp;{{current.snow_depth}}</li>
-        <li><b>Updated</b>:&nbsp;{{current.timestamp}}</li>
-    </ul>
+    <div class="container">
+        <h1>{{sensor.name}}</h1>
+        <div class="current_conditions">
+            <div><b>Air Temp</b>:&nbsp;{{current.head_temp}}</div>
+            <div><b>Snow Temp</b>:&nbsp;{{current.surface_temp}}</div>
+            <div><b>Snow Depth</b>:&nbsp;{{current.snow_depth}}</div>
+            <div><b>Updated</b>:&nbsp;{{current.timestamp}}</div>
+        </div>
+        <img class="webcam" ng-src="{{sensor.webcam_url}}">
+    </div>
     <div id="dashboard" style='width:100%'>
-        <div id="chart" style='height: 300px;'></div>
-        <div id="control" style='height: 50px;'></div>
+        <div id="chart" style='height: 400px;'></div>
+        <div id="control" style='height: 75px;'></div>
     </div>
-    <img ng-src="{{sensor.webcam_url}}">
 </div>

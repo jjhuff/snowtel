@@ -88,3 +88,15 @@ footer {
       padding-left: 15px;
     }
 }
+
+.sensor {
+    .current_conditions {
+        float: left;
+        width: 50%;
+    }
+    .webcam {
+        float: left;
+        max-height: 200px;
+        max-width: 50%;
+    }
+}
