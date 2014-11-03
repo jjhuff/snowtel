@@ -1,4 +1,4 @@
-application: methowsnow
+application: methowsnow-dev
 module: default
 version: 2
 runtime: go

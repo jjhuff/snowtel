@@ -13,7 +13,7 @@ type Config struct {
 var configs = map[string]Config{
 	"methowsnow": Config{
 		GoogleAnalyticsID: "",
-		Minified:          false,
+		Minified:          true,
 	},
 	"methowsnow-dev": Config{
 		GoogleAnalyticsID: "",
