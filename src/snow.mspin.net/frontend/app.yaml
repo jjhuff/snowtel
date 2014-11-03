@@ -1,0 +1,68 @@
+application: methowsnow
+module: default
+version: 2
+runtime: go
+api_version: go1
+automatic_scaling:
+  min_idle_instances: 0
+  max_idle_instances: automatic  # default value
+  min_pending_latency: automatic  # default value
+  max_pending_latency: 100ms
+  max_concurrent_requests: 50
+
+skip_files:
+    - ^(.*/)?#.*#$
+    - ^(.*/)?.*~$
+    - ^(.*/)?.*\.py[co]$
+    - ^(.*/)?\..*$
+    - ^vendor/.*\.scss$
+    - ^vendor/.*\.md$
+
+handlers:
+    - url: /robots.txt
+      static_files: static/robots-prod.txt
+      upload: static/robots-prod.txt
+
+    - url: /sitemap.xml
+      static_files: static/sitemap.xml
+      upload: static/sitemap.xml
+
+    - url: /_/build
+      static_dir: build
+      #secure: always
+      application_readable: true
+      expiration: 365d
+
+    - url: /_/vendor
+      static_dir: vendor
+      #secure: always
+
+    - url: /_/scripts
+      static_dir: scripts
+      #secure: always
+
+    - url: /_/views/
+      static_dir: views
+      #secure: always
+
+    - url: /_/images
+      static_dir: images
+      #secure: always
+
+    - url: /_/fonts
+      static_dir: fonts
+      #secure: always
+
+    - url: /_/api/.*
+      script: _go_app
+      #secure: always
+
+    - url: /favicon.ico
+      static_files: static/favicon.ico
+      upload: static/favicon.ico
+      expiration: 1d
+
+    - url: /.*
+      script: _go_app
+      #secure: always
+

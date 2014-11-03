@@ -17,6 +17,10 @@ app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', functio
         url: "/",
         templateUrl: "/_/views/main.html",
     })
+    .state("sensor", {
+        url: "/sensor/:id",
+        templateUrl: "/_/views/sensor.html",
+    })
 }]);
 
 

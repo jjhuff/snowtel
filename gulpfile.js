@@ -44,8 +44,7 @@ var paths = {
     ae_extra: './src/snow.mspin.net/frontend/',
     ae_yaml: {
         dispatch: ['./src/snow.mspin.net/frontend/dispatch.yaml'],
-        prod: ['./src/snow.mspin.net/frontend/app-prod.yaml'],
-        dev: ['./src/snow.mspin.net/frontend/app-dev.yaml'],
+        frontend: ['./src/snow.mspin.net/frontend/app.yaml'],
     },
 };
 
@@ -132,7 +131,7 @@ gulp.task('watch', ['build'], function() {
 });
 
 gulp.task('server', ['watch'], function(){
-    var cfg = [].concat(paths.ae_yaml.dev, paths.ae_yaml.dispatch);
+    var cfg = [].concat(paths.ae_yaml.frontend, paths.ae_yaml.dispatch);
     gulp.src('').pipe(shell([
         'goapp serve --port='+options.devserver_port+' --admin_port='+options.admin_port+' ' + cfg.join(' ')
     ]));
@@ -141,9 +140,9 @@ gulp.task('server', ['watch'], function(){
 gulp.task('deploy', ['build'], function(){
     var appcfg = 'appcfg.py --oauth2 ';
     gulp.src('').pipe(shell([
-        appcfg + 'update_cron ' + paths.ae_extra,
-        appcfg + 'update ' + paths.ae_yaml.prod.join(' '),
-        appcfg + 'update_dispatch ' + paths.ae_extra,
+        //appcfg + 'update_cron ' + paths.ae_extra,
+        appcfg + 'update ' + paths.ae_yaml.frontend.join(' '),
+        //appcfg + 'update_dispatch ' + paths.ae_extra,
     ]));
 });
 
