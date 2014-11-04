@@ -1,4 +1,4 @@
-application: methowsnow
+application: methowsnow-dev
 module: batch
 version: 1
 runtime: python27
