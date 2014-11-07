@@ -28,6 +28,17 @@ app.filter('encodeUri', ['$window', function ($window) {
     return $window.encodeURIComponent;
 }]);
 
+app.filter('c2f', function () {
+    return function(c) {
+        return c*1.8+32;
+    }
+});
+app.filter('cm2in', function () {
+    return function(c) {
+        return c*0.3937;
+    }
+});
+
 angular.module('app').value('cgBusyDefaults',{
     templateUrl: '/_/views/angular-busy.html',
     delay: 500,

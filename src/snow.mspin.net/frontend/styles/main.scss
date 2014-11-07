@@ -93,6 +93,11 @@ footer {
     .current_conditions {
         float: left;
         width: 50%;
+        dd>span{
+            width: 70px;
+            display: inline-block;
+            text-align: right;
+        }
     }
     .webcam {
         float: left;
