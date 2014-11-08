@@ -79,21 +79,28 @@ func (app *AppContext) GetReadings(w rest.ResponseWriter, req *rest.Request) {
 	}
 	sensorKey := datastore.NewKey(ctx, sensorEntityKind, sensorId, 0, nil)
 
-	var readings []Reading = make([]Reading, 0)
-	_, err := datastore.NewQuery(readingEntityKind).
+	q := datastore.NewQuery(readingEntityKind).
 		Filter("sensor =", sensorKey).
-		Order("-timestamp").
-		Limit(2500).
-		GetAll(ctx, &readings)
+		Order("-timestamp")
+
+	afterStr := req.FormValue("after")
+	if afterStr != "" {
+		after, err := time.Parse(time.RFC3339Nano, afterStr)
+		if err == nil {
+			q = q.Filter("timestamp >", after)
+		} else {
+			rest.Error(w, "Failed to parse param: after", http.StatusBadRequest)
+		}
+	}
+
+	var readings []Reading = make([]Reading, 0)
+	_, err := q.Limit(2500).GetAll(ctx, &readings)
 
 	if err != nil {
 		if _, ok := err.(*datastore.ErrFieldMismatch); !ok {
 			rest.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}
-	if len(readings) == 0 {
-		w.WriteHeader(http.StatusNotFound)
 	}
 	w.WriteJson(readings)
 }

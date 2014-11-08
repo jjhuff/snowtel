@@ -7,21 +7,34 @@ angular.module('app')
     google.load('visualization', '1.0', {packages: ['corechart', 'controls']});
 
     $scope.sensor = Sensor.get({id:$stateParams.id});
+    $scope.readings = []
+
+    function update(){
+        var readings = $scope.readings;
+        if (readings.length>0) {
+            $scope.current = readings[0];
+            window.drawVisualization($scope.readings)
+        }
+    };
 
     function refresh() {
-        $scope.readings = Readings.get({id:$stateParams.id});
-        $scope.readings.$promise.then(function(readings){
-            if (readings && readings.length>0) {
-                $scope.current = readings[0];
-            }
-            window.drawVisualization($scope.readings)
-        });
+        if ($scope.readings.length>0) {
+            Readings.get({
+                id:$stateParams.id,
+                after:$scope.current.timestamp
+            }).$promise.then(function(new_readings){
+                $scope.readings = new_readings.concat($scope.readings);
+                update();
+            });
+        } else {
+            $scope.readings = Readings.get({id:$stateParams.id});
+            $scope.readings.$promise.then(update);
+        }
     }
 
     stop = $interval(function() {
-        console.log("refresh");
         refresh();
-    }, 5*60*1000);
+    }, 60*1000);
 
     $scope.$on('$destroy', function() {
         if (angular.isDefined(stop)) {
