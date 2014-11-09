@@ -97,6 +97,16 @@ function getDataTable(readings) {
 
 function drawVisualization(readings) {
 
+    if (window._dashboard) {
+        window._dashboard.clear();
+    }
+    if (window._chart) {
+        window._chart.getChart().clearChart();
+    }
+    if (window._control) {
+        window._control.clear();
+    }
+
     var data = getDataTable(readings);
 
     var DAY = 24*60*60*1000;
@@ -104,7 +114,7 @@ function drawVisualization(readings) {
     // Start at the last reading
     var stop_dt = data.getValue(data.getNumberOfRows()-1, TIMESTAMP);
     var start_dt = new Date(stop_dt.getTime() - 7*DAY);
-    var control = new google.visualization.ControlWrapper({
+    window._control = new google.visualization.ControlWrapper({
         controlType: 'ChartRangeFilter',
             containerId: 'control',
             options: {
@@ -130,7 +140,7 @@ function drawVisualization(readings) {
     });
      
     // Plot the snow temps and depths
-    var chart = new google.visualization.ChartWrapper({
+    window._chart = new google.visualization.ChartWrapper({
         chartType: 'LineChart',
         containerId: 'chart',
         options: {
@@ -152,7 +162,7 @@ function drawVisualization(readings) {
     });
 
     // Fire up the dashboard
-    var dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
-    dashboard.bind(control, chart);
-    dashboard.draw(data);
+    window._dashboard = new google.visualization.Dashboard(document.getElementById('dashboard'));
+    window._dashboard.bind(window._control, window._chart);
+    window._dashboard.draw(data);
 }
