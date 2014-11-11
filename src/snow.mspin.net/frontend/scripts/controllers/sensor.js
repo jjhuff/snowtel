@@ -10,6 +10,9 @@ angular.module('app')
     $scope.readings = []
 
     function update(){
+        if ($scope.sensor.webcam_url) {
+            $scope.webcam_url = $scope.sensor.webcam_url + "?cb=" + Math.random();
+        }
         var readings = $scope.readings;
         if (readings.length>0) {
             $scope.current = readings[0];
