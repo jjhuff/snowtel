@@ -52,6 +52,12 @@ func getSensor(ctx appengine.Context, id string) (Sensor, error) {
 	return sensor, nil
 }
 
+func putSensor(ctx appengine.Context, sensor Sensor) error {
+	sensorKey := datastore.NewKey(ctx, sensorEntityKind, sensor.Id, 0, nil)
+	_, err := datastore.Put(ctx, sensorKey, &sensor)
+	return err
+}
+
 func getWeatherUndergroundTemp(ctx appengine.Context, stationId string) (float32, error) {
 	client := urlfetch.Client(ctx)
 	resp, err := client.Get("https://api.wunderground.com/api/" + config.Get(ctx).WeatherUndergroundKey + "/conditions/q/" + stationId + ".json")
@@ -156,24 +162,6 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	sensor, err := getSensor(ctx, sensorId)
-	if err != nil {
-		if err == datastore.ErrNoSuchEntity {
-			// TODO: make new sensor
-			ctx.Errorf("Unknown sensor")
-			rest.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		} else {
-			rest.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	reading := Reading{
-		Sensor:    datastore.NewKey(ctx, sensorEntityKind, sensorId, 0, nil),
-		Timestamp: time.Now(),
-	}
-
 	// Helper to parse a float form field
 	getFloat := func(field string) (float32, error) {
 		f, err := strconv.ParseFloat(req.FormValue(field), 32)
@@ -183,6 +171,13 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 		} else {
 			return float32(f), nil
 		}
+	}
+
+	// Parse reading data
+	var err error
+	reading := Reading{
+		Sensor:    datastore.NewKey(ctx, sensorEntityKind, sensorId, 0, nil),
+		Timestamp: time.Now(),
 	}
 
 	if reading.AmbientTemp, err = getFloat("ambient_temp"); err != nil {
@@ -198,10 +193,28 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 	if snow_dist, err = getFloat("snow_dist"); err != nil {
 		return
 	}
+
+	// Get/Create the sensor
+	var sensor Sensor
+	sensor, err = getSensor(ctx, sensorId)
+	if err != nil {
+		if err == datastore.ErrNoSuchEntity {
+			ctx.Warningf("Creating new sensor: %s", sensorId)
+			sensor.Id = sensorId
+			sensor.Name = "Unknown - " + sensorId
+			sensor.Height = snow_dist
+			err = putSensor(ctx, sensor)
+		}
+		if err != nil {
+			rest.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Calculate snow depth
 	reading.SnowDepth = sensor.Height - snow_dist
 
 	// Fetch info from WeatherUnderground
-	// TODO: do this in a goroutine?
 	if sensor.WeatherUndergroundStationId != "" {
 		reading.StationTemp, err = getWeatherUndergroundTemp(ctx, sensor.WeatherUndergroundStationId)
 		if err != nil {
@@ -215,5 +228,4 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	ctx.Infof("Reading: %v", reading)
 }
