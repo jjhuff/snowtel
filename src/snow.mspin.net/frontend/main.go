@@ -79,13 +79,8 @@ func init() {
 		&rest.Route{HttpMethod: "GET", PathExp: "/sensors/:id", Func: app.GetSensor},
 		&rest.Route{HttpMethod: "GET", PathExp: "/sensors/:id/readings", Func: app.GetReadings},
 		&rest.Route{HttpMethod: "POST", PathExp: "/sensors/:id/readings", Func: app.PostReading},
-
-		//Legacy API
-		&rest.Route{HttpMethod: "POST", PathExp: "/sensor/:id/readings", Func: app.PostReading},
 	)
 	http.Handle("/_/api/v1/", http.StripPrefix("/_/api/v1", &restHandler))
-	// Legacy API
-	http.Handle("/sensor/53ff6d066667574821411267/readings", &restHandler)
 
 	http.HandleFunc("/", app.handleIndex)
 }
