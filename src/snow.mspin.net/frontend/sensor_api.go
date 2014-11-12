@@ -3,15 +3,21 @@ package methowsnow
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/urlfetch"
+
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/ant0ine/go-json-rest/rest"
+
+	"snow.mspin.net/config"
 )
 
 type Sensor struct {
-	Id                          string  `json:"id" datastore:-`
+	Id                          string  `json:"id" datastore:"-"`
 	Name                        string  `json:"name" datastore:"location_name,noindex"`
 	Height                      float32 `json:"height" datastore:"snow_sensor_height,noindex"`
 	WebcamURL                   string  `json:"webcam_url" datastore:"webcam_url,noindex"`
@@ -44,6 +50,31 @@ func getSensor(ctx appengine.Context, id string) (Sensor, error) {
 		}
 	}
 	return sensor, nil
+}
+
+func getWeatherUndergroundTemp(ctx appengine.Context, stationId string) (float32, error) {
+	client := urlfetch.Client(ctx)
+	resp, err := client.Get("https://api.wunderground.com/api/" + config.Get(ctx).WeatherUndergroundKey + "/conditions/q/" + stationId + ".json")
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	var responseJSON struct {
+		CurrentObservation struct {
+			Temperature float32 `json:"temp_c"`
+		} `json:"current_observation"`
+	}
+
+	err = json.Unmarshal(body, &responseJSON)
+	if err != nil {
+		return 0, err
+	}
+	return responseJSON.CurrentObservation.Temperature, nil
 }
 
 func (app *AppContext) GetSensors(w rest.ResponseWriter, req *rest.Request) {
@@ -168,6 +199,15 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 	reading.SnowDepth = sensor.Height - snow_dist
+
+	// Fetch info from WeatherUnderground
+	// TODO: do this in a goroutine?
+	if sensor.WeatherUndergroundStationId != "" {
+		reading.StationTemp, err = getWeatherUndergroundTemp(ctx, sensor.WeatherUndergroundStationId)
+		if err != nil {
+			ctx.Warningf("Failed to read station temp: %s", err.Error())
+		}
+	}
 
 	readingKey := datastore.NewIncompleteKey(ctx, readingEntityKind, nil)
 	_, err = datastore.Put(ctx, readingKey, &reading)
