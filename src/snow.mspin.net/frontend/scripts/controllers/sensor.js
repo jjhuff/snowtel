@@ -15,7 +15,6 @@ angular.module('app')
         }
         var readings = $scope.readings;
         if (readings.length>0) {
-            $scope.current = readings[0];
             window.drawVisualization($scope.readings)
         }
     };
@@ -24,7 +23,7 @@ angular.module('app')
         if ($scope.readings.length>0) {
             Readings.get({
                 id:$stateParams.id,
-                after:$scope.current.timestamp
+                after:$scope.readings[0].timestamp
             }).$promise.then(function(new_readings){
                 $scope.readings = new_readings.concat($scope.readings);
                 update();

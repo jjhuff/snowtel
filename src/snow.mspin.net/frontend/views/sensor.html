@@ -4,20 +4,21 @@
         <dl class="current_conditions dl-horizontal">
             <dt>Air Temp</dt>
             <dd>
-                <span>{{current.head_temp|number:1}}&deg;C</span>
-                <span>{{current.head_temp|c2f|number:1}}&deg;F</span>
+                <span>{{readings[0].head_temp|number:1}}&deg;C</span>
+                <span>{{readings[0].head_temp|c2f|number:1}}&deg;F</span>
             </dd>
             <dt>Snow Temp</dt>
             <dd>
-                <span>{{current.surface_temp|number:1}}&deg;C</span>
-                <span>{{current.surface_temp|c2f|number:1}}&deg;F</span>
+                <span>{{readings[0].surface_temp|number:1}}&deg;C</span>
+                <span>{{readings[0].surface_temp|c2f|number:1}}&deg;F</span>
             </dd>
             <dt>Snow Depth</dt>
             <dd>
-                <span>{{current.snow_depth|number:1}}cm</span>
-                <span>{{current.snow_depth|cm2in|number:1}}in</span>
+                <span>{{readings[0].snow_depth|number:1}}cm</span>
+                <span>{{readings[0].snow_depth|cm2in|number:1}}in</span>
             </dd>
-            <dt>Updated</dt>    <dd>{{current.timestamp|date:"medium"}}</dd>
+            <dt>Updated</dt>
+            <dd>{{readings[0].timestamp|date:"medium"}}</dd>
         </dl>
         <img class="webcam" ng-src="{{webcam_url}}">
     </div>
