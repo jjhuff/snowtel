@@ -4,9 +4,16 @@
         <dl class="current_conditions dl-horizontal">
             <dt>Air Temp</dt>
             <dd>
-                <span>{{readings[0].head_temp|number:1}}&deg;C</span>
-                <span>{{readings[0].head_temp|c2f|number:1}}&deg;F</span>
+                <span>{{readings[0].ambient_temp|number:1}}&deg;C</span>
+                <span>{{readings[0].ambient_temp|c2f|number:1}}&deg;F</span>
             </dd>
+            <div ng-if='readings[0].station_temp'>
+                <dt>Weather Station</dt>
+                <dd>
+                    <span>{{readings[0].station_temp|number:1}}&deg;C</span>
+                    <span>{{readings[0].station_temp|c2f|number:1}}&deg;F</span>
+                </dd>
+            </div>
             <dt>Snow Temp</dt>
             <dd>
                 <span>{{readings[0].surface_temp|number:1}}&deg;C</span>
