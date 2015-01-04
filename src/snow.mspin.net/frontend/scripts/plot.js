@@ -43,8 +43,8 @@ function getDataTable(readings) {
     data.addColumn('number', 'Snow Temp');
     data.addColumn('number', 'Snow Depth');
 
-    var depth_filter = new Filter(4);
-    var surface_temp_filter = new Filter(4);
+    var depth_filter = new MedianFilter(12*4);
+    var surface_temp_filter = new MeanFilter(4);
 
     var last_dt =  new Date(readings[0].timestamp);
     for (var i=0; i<readings.length; i++) {
