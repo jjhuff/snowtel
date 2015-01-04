@@ -117,6 +117,35 @@ func (app *AppContext) GetSensor(w rest.ResponseWriter, req *rest.Request) {
 	w.WriteJson(sensor)
 }
 
+func (app *AppContext) PutSensor(w rest.ResponseWriter, req *rest.Request) {
+	ctx := appengine.NewContext(req.Request)
+
+	sensorId := req.PathParam("id")
+	if sensorId == "" {
+		rest.Error(w, "Missing sensor id", http.StatusBadRequest)
+		return
+	}
+	sensor, err := getSensor(ctx, sensorId)
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = req.DecodeJsonPayload(&sensor)
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = putSensor(ctx, sensor)
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteJson(sensor)
+}
+
 func (app *AppContext) GetReadings(w rest.ResponseWriter, req *rest.Request) {
 	ctx := appengine.NewContext(req.Request)
 
@@ -227,5 +256,50 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func (app *AppContext) DeleteReadings(w rest.ResponseWriter, req *rest.Request) {
+	ctx := appengine.NewContext(req.Request)
+
+	sensorId := req.PathParam("id")
+	if sensorId == "" {
+		rest.Error(w, "Missing sensor id", http.StatusBadRequest)
+		return
+	}
+	sensorKey := datastore.NewKey(ctx, sensorEntityKind, sensorId, 0, nil)
+
+	q := datastore.NewQuery(readingEntityKind).
+		Filter("sensor =", sensorKey).
+		KeysOnly()
+
+	afterStr := req.FormValue("after")
+	if afterStr != "" {
+		after, err := time.Parse(time.RFC3339Nano, afterStr)
+		if err == nil {
+			q = q.Filter("timestamp >", after)
+		} else {
+			rest.Error(w, "Failed to parse param: after", http.StatusBadRequest)
+		}
+	}
+
+	keys, err := q.GetAll(ctx, nil)
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for i := 0; i < len(keys); i += 500 {
+		j := i + 500
+		if j > len(keys) {
+			j = len(keys)
+		}
+		delKeys := keys[i:j]
+		err = datastore.DeleteMulti(ctx, delKeys)
+		if err != nil {
+			ctx.Warningf("i: %d, len:%d", i, len(keys))
+			rest.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
