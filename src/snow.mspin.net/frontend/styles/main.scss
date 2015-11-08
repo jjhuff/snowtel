@@ -12,9 +12,9 @@ $headerHeight: 50px;
 .navbar-brand, .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
 
 
-.navbar-inner {
-    @include single-box-shadow(rgba(0,0,0,0.175), 0, 3px, 3px);
-}
+//.navbar-inner {
+//    @include single-box-shadow(rgba(0,0,0,0.175), 0, 3px, 3px);
+//}
 
 .nav {
     &.gravatar {

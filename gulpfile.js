@@ -139,7 +139,7 @@ gulp.task('server', ['watch'], function(){
 });
 
 gulp.task('deploy', ['build'], function(){
-    var appcfg = 'appcfg.py --oauth2 -A methowsnow ';
+    var appcfg = 'stdbuf -o0 -e0 appcfg.py --noauth_local_webserver -A methowsnow ';
     gulp.src('').pipe(shell([
         appcfg + 'update_indexes .',
         appcfg + 'update ' + paths.ae.modules.join(' '),
@@ -149,7 +149,7 @@ gulp.task('deploy', ['build'], function(){
 });
 
 gulp.task('vacuum_indexes', [], function(){
-    var appcfg = 'stdbuf -o0 -e0 appcfg.py --oauth2 -A methowsnow ';
+    var appcfg = 'stdbuf -o0 -e0 appcfg.py -A methowsnow ';
     gulp.src('').pipe(shell([
         appcfg + 'vacuum_indexes .',
     ],{maxBuffer:1024}));
