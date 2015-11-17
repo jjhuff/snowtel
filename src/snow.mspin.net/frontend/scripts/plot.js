@@ -2,14 +2,16 @@
 
 // Columns
 var TIMESTAMP = 0;
-var AIR_TEMP = 1;
-var SNOW_TEMP = 2;
-var SNOW_DEPTH = 3;
+var STATION_TEMP = 1;
+var AIR_TEMP = 2;
+var SNOW_TEMP = 3;
+var SNOW_DEPTH = 4;
 
 //Colors
 var SNOW_HEIGHT_COLOR = '#F79F81';
 var SNOW_TEMP_COLOR = '#81F79F';
 var AIR_TEMP_COLOR = '#81DAF5';
+var STATION_TEMP_COLOR = '#8165EC';
 
 var UNITS = {
     metric: {
@@ -39,6 +41,7 @@ var selected_units = 'imperial';
 function getDataTable(readings) {
     var data = new google.visualization.DataTable();
     data.addColumn('datetime', 'Date');
+    data.addColumn('number', 'Station Temp');
     data.addColumn('number', 'Air Temp');
     data.addColumn('number', 'Snow Temp');
     data.addColumn('number', 'Snow Depth');
@@ -58,14 +61,15 @@ function getDataTable(readings) {
         var last_dt = dt;
 
         // Temp readings
+        var station_temp = UNITS[selected_units].temp.convert(r.station_temp);
         var air_temp = UNITS[selected_units].temp.convert(r.ambient_temp);
         var surface_temp = UNITS[selected_units].temp.convert(r.surface_temp);
-        var surface_temp = surface_temp_filter.add(surface_temp);
+        surface_temp = surface_temp_filter.add(surface_temp);
 
         // Snow depth
         var d = r.snow_depth;
         var snow_depth;
-        if(d>0) {
+        if(d>0 || true) {
             d = depth_filter.add(d);
             snow_depth = UNITS[selected_units].dist.convert(d);
         } else {
@@ -73,7 +77,7 @@ function getDataTable(readings) {
             snow_depth = null;
         }
 
-        data.addRow([dt, air_temp, surface_temp, snow_depth]);
+        data.addRow([dt, station_temp, air_temp, surface_temp, snow_depth]);
     }
     data.sort(TIMESTAMP);
 
@@ -85,6 +89,7 @@ function getDataTable(readings) {
     var temp_formatter = new google.visualization.NumberFormat({
         pattern: UNITS[selected_units].temp.format
     });
+    temp_formatter.format(data, STATION_TEMP);
     temp_formatter.format(data, AIR_TEMP);
     temp_formatter.format(data, SNOW_TEMP);
     var height_formatter = new google.visualization.NumberFormat({
@@ -153,12 +158,13 @@ function drawVisualization(readings) {
                 {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:20}
             ],
             series: [
+                {targetAxisIndex: 0, color: STATION_TEMP_COLOR},
                 {targetAxisIndex: 0, color: AIR_TEMP_COLOR},
                 {targetAxisIndex: 0, color: SNOW_TEMP_COLOR},
                 {targetAxisIndex: 1, color: SNOW_HEIGHT_COLOR}
             ]
         },
-       view: {columns: [TIMESTAMP, AIR_TEMP, SNOW_TEMP, SNOW_DEPTH]}
+       view: {columns: [TIMESTAMP, STATION_TEMP, AIR_TEMP, SNOW_TEMP, SNOW_DEPTH]}
     });
 
     // Fire up the dashboard
