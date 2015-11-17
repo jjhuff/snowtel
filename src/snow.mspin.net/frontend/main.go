@@ -81,6 +81,7 @@ func init() {
 		&rest.Route{HttpMethod: "GET", PathExp: "/sensors/:id/readings", Func: app.GetReadings},
 		&rest.Route{HttpMethod: "POST", PathExp: "/sensors/:id/readings", Func: app.PostReading},
 		&rest.Route{HttpMethod: "DELETE", PathExp: "/sensors/:id/readings", Func: app.DeleteReadings},
+		&rest.Route{HttpMethod: "PUT", PathExp: "/sensors/:id/adjust", Func: app.AdjustReadings},
 	)
 	http.Handle("/_/api/v1/", http.StripPrefix("/_/api/v1", &restHandler))
 

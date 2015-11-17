@@ -27,13 +27,14 @@ type Sensor struct {
 const sensorEntityKind = "Sensor"
 
 type Reading struct {
-	Sensor      *datastore.Key `json:"-" datastore:"sensor"`
-	Timestamp   time.Time      `json:"timestamp" datastore:"timestamp"`
-	AmbientTemp float32        `json:"ambient_temp" datastore:"ambient_temp,noindex"`
-	SurfaceTemp float32        `json:"surface_temp" datastore:"surface_temp,noindex"`
-	HeadTemp    float32        `json:"head_temp" datastore:"head_temp,noindex"`
-	StationTemp float32        `json:"station_temp" datastore:"station_temp,noindex"`
-	SnowDepth   float32        `json:"snow_depth" datastore:"snow_depth,noindex"`
+	Sensor       *datastore.Key `json:"-" datastore:"sensor"`
+	Timestamp    time.Time      `json:"timestamp" datastore:"timestamp"`
+	AmbientTemp  float32        `json:"ambient_temp" datastore:"ambient_temp,noindex"`
+	SurfaceTemp  float32        `json:"surface_temp" datastore:"surface_temp,noindex"`
+	HeadTemp     float32        `json:"head_temp" datastore:"head_temp,noindex"`
+	StationTemp  float32        `json:"station_temp" datastore:"station_temp,noindex"`
+	SnowDepth    float32        `json:"snow_depth" datastore:"snow_depth,noindex"`
+	SensorHeight float32        `json:"-" datastore:"sensor_height,noindex"`
 }
 
 const readingEntityKind = "Reading"
@@ -242,6 +243,7 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 
 	// Calculate snow depth
 	reading.SnowDepth = sensor.Height - snow_dist
+	reading.SensorHeight = sensor.Height
 
 	// Fetch info from WeatherUnderground
 	if sensor.WeatherUndergroundStationId != "" {
@@ -273,16 +275,6 @@ func (app *AppContext) DeleteReadings(w rest.ResponseWriter, req *rest.Request) 
 		Filter("sensor =", sensorKey).
 		KeysOnly()
 
-	afterStr := req.FormValue("after")
-	if afterStr != "" {
-		after, err := time.Parse(time.RFC3339Nano, afterStr)
-		if err == nil {
-			q = q.Filter("timestamp >", after)
-		} else {
-			rest.Error(w, "Failed to parse param: after", http.StatusBadRequest)
-		}
-	}
-
 	keys, err := q.GetAll(ctx, nil)
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
@@ -302,4 +294,78 @@ func (app *AppContext) DeleteReadings(w rest.ResponseWriter, req *rest.Request) 
 			return
 		}
 	}
+}
+
+func (app *AppContext) AdjustReadings(w rest.ResponseWriter, req *rest.Request) {
+	ctx := appengine.NewContext(req.Request)
+
+	sensorId := req.PathParam("id")
+	if sensorId == "" {
+		rest.Error(w, "Missing sensor id", http.StatusBadRequest)
+		return
+	}
+	sensorKey := datastore.NewKey(ctx, sensorEntityKind, sensorId, 0, nil)
+
+	q := datastore.NewQuery(readingEntityKind).Filter("sensor =", sensorKey)
+
+	afterStr := req.FormValue("after")
+	if afterStr != "" {
+		after, err := time.Parse(time.RFC3339Nano, afterStr)
+		if err == nil {
+			q = q.Filter("timestamp >", after)
+		} else {
+			rest.Error(w, "Failed to parse param: after", http.StatusBadRequest)
+		}
+	}
+
+	beforeStr := req.FormValue("before")
+	if beforeStr != "" {
+		before, err := time.Parse(time.RFC3339Nano, beforeStr)
+		if err == nil {
+			q = q.Filter("timestamp >", before)
+		} else {
+			rest.Error(w, "Failed to parse param: before", http.StatusBadRequest)
+		}
+	}
+
+	oldHeight, _ := strconv.ParseFloat(req.FormValue("old_height"), 32)
+	newHeight, _ := strconv.ParseFloat(req.FormValue("new_height"), 32)
+	delta := newHeight - oldHeight
+	if req.FormValue("delta") != "" {
+		delta, _ = strconv.ParseFloat(req.FormValue("delta"), 32)
+	}
+
+	ctx.Infof("Adjusting height old:%f new:%f delta:%f", oldHeight, newHeight, delta)
+
+	var readings []Reading = make([]Reading, 0)
+	_, err := q.GetAll(ctx, &readings)
+	if err != nil {
+		ctx.Warningf("GetAll Error: %v", err)
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for i, r := range readings {
+		if r.SensorHeight == float32(oldHeight) || r.SensorHeight == 0 {
+			r.SensorHeight = float32(newHeight)
+			r.SnowDepth += float32(delta)
+		}
+		ctx.Infof("Adjust: %v Depth:%f SensorHeight:%f", r.Timestamp, r.SnowDepth, r.SensorHeight)
+		readings[i] = r
+	}
+
+	/*
+		for i := 0; i < len(readings); i += 50 {
+			j := i + 50
+			if j > len(readings) {
+				j = len(readings)
+			}
+			updateReadings := readings[i:j]
+			err = datastore.PutMulti(ctx, updateReadings)
+			if err != nil {
+				ctx.Warningf("i: %d, len:%d", i, len(updateReadings))
+				rest.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}*/
 }
