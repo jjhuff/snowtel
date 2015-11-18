@@ -35,6 +35,7 @@ type Reading struct {
 	StationTemp  float32        `json:"station_temp" datastore:"station_temp,noindex"`
 	SnowDepth    float32        `json:"snow_depth" datastore:"snow_depth,noindex"`
 	SensorHeight float32        `json:"-" datastore:"sensor_height,noindex"`
+	LIDARSignal  float32        `json:"lidar_signal" datastore:",noindex"`
 }
 
 const readingEntityKind = "Reading"
@@ -218,6 +219,11 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 	}
 	if reading.HeadTemp, err = getFloat("head_temp"); err != nil {
 		return
+	}
+	if req.FormValue("lidar_signal") != "" {
+		if reading.LIDARSignal, err = getFloat("lidar_signal"); err != nil {
+			return
+		}
 	}
 	var snow_dist float32
 	if snow_dist, err = getFloat("snow_dist"); err != nil {
