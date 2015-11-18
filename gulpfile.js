@@ -139,13 +139,13 @@ gulp.task('server', ['watch'], function(){
 });
 
 gulp.task('deploy', ['build'], function(){
-    var appcfg = 'stdbuf -o0 -e0 appcfg.py --noauth_local_webserver -A methowsnow ';
+    var appcfg = 'stdbuf -o0 -e0 python2.7 ~/go_appengine/appcfg.py --noauth_local_webserver -A methowsnow ';
     gulp.src('').pipe(shell([
         appcfg + 'update_indexes .',
         appcfg + 'update ' + paths.ae.modules.join(' '),
         appcfg + 'update_dispatch .',
         appcfg + 'update_cron .',
-    ]));
+    ], {interactive:true}));
 });
 
 gulp.task('vacuum_indexes', [], function(){
