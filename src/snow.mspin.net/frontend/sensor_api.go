@@ -322,7 +322,7 @@ func (app *AppContext) AdjustReadings(w rest.ResponseWriter, req *rest.Request) 
 	if beforeStr != "" {
 		before, err := time.Parse(time.RFC3339Nano, beforeStr)
 		if err == nil {
-			q = q.Filter("timestamp >", before)
+			q = q.Filter("timestamp <=", before)
 		} else {
 			rest.Error(w, "Failed to parse param: before", http.StatusBadRequest)
 		}
@@ -338,7 +338,7 @@ func (app *AppContext) AdjustReadings(w rest.ResponseWriter, req *rest.Request) 
 	ctx.Infof("Adjusting height old:%f new:%f delta:%f", oldHeight, newHeight, delta)
 
 	var readings []Reading = make([]Reading, 0)
-	_, err := q.GetAll(ctx, &readings)
+	keys, err := q.GetAll(ctx, &readings)
 	if err != nil {
 		ctx.Warningf("GetAll Error: %v", err)
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
@@ -349,23 +349,13 @@ func (app *AppContext) AdjustReadings(w rest.ResponseWriter, req *rest.Request) 
 		if r.SensorHeight == float32(oldHeight) || r.SensorHeight == 0 {
 			r.SensorHeight = float32(newHeight)
 			r.SnowDepth += float32(delta)
-		}
-		ctx.Infof("Adjust: %v Depth:%f SensorHeight:%f", r.Timestamp, r.SnowDepth, r.SensorHeight)
-		readings[i] = r
-	}
-
-	/*
-		for i := 0; i < len(readings); i += 50 {
-			j := i + 50
-			if j > len(readings) {
-				j = len(readings)
-			}
-			updateReadings := readings[i:j]
-			err = datastore.PutMulti(ctx, updateReadings)
+			//ctx.Infof("Adjust: %v Depth:%f SensorHeight:%f", r.Timestamp, r.SnowDepth, r.SensorHeight)
+			_, err = datastore.Put(ctx, keys[i], &r)
 			if err != nil {
-				ctx.Warningf("i: %d, len:%d", i, len(updateReadings))
+				ctx.Warningf("Put err: %s, %v", keys[i], err)
 				rest.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-		}*/
+		}
+	}
 }
