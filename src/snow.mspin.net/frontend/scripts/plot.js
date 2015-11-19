@@ -6,12 +6,14 @@ var STATION_TEMP = 1;
 var AIR_TEMP = 2;
 var SNOW_TEMP = 3;
 var SNOW_DEPTH = 4;
+var LIDAR_SIGNAL = 5;
 
 //Colors
 var SNOW_HEIGHT_COLOR = '#F79F81';
 var SNOW_TEMP_COLOR = '#81F79F';
 var AIR_TEMP_COLOR = '#81DAF5';
 var STATION_TEMP_COLOR = '#8165EC';
+var LIDAR_SIGNAL_COLOR = '#ECC565';
 
 var UNITS = {
     metric: {
@@ -45,6 +47,7 @@ function getDataTable(readings) {
     data.addColumn('number', 'Air Temp');
     data.addColumn('number', 'Snow Temp');
     data.addColumn('number', 'Snow Depth');
+    data.addColumn('number', 'LIDAR Signal');
 
     var depth_filter = new MedianFilter(4);
     var surface_temp_filter = new MeanFilter(4);
@@ -76,8 +79,9 @@ function getDataTable(readings) {
             depth_filter.add(null);
             snow_depth = null;
         }
+        var lidar_signal = r.lidar_signal>0?r.lidar_signal:null;
 
-        data.addRow([dt, station_temp, air_temp, surface_temp, snow_depth]);
+        data.addRow([dt, station_temp, air_temp, surface_temp, snow_depth, lidar_signal]);
     }
     data.sort(TIMESTAMP);
 
@@ -96,6 +100,11 @@ function getDataTable(readings) {
         pattern: UNITS[selected_units].dist.format
     });
     height_formatter.format(data, SNOW_DEPTH);
+
+    var lidar_formatter = new google.visualization.NumberFormat({
+        pattern: "###"
+    });
+    lidar_formatter.format(data, LIDAR_SIGNAL);
 
     return data;
 }
@@ -155,16 +164,18 @@ function drawVisualization(readings) {
             hAxis: {textPosition: 'out'},
             vAxes: [
                 {format: UNITS[selected_units].temp.format},
-                {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:20}
+                {format: UNITS[selected_units].dist.format, minValue: 0, maxValue:20},
+                {format: "###", minValue: 0, maxValue:255, textStyle:{color:"transparent"}}
             ],
             series: [
                 {targetAxisIndex: 0, color: STATION_TEMP_COLOR},
                 {targetAxisIndex: 0, color: AIR_TEMP_COLOR},
                 {targetAxisIndex: 0, color: SNOW_TEMP_COLOR},
-                {targetAxisIndex: 1, color: SNOW_HEIGHT_COLOR}
+                {targetAxisIndex: 1, color: SNOW_HEIGHT_COLOR},
+                {targetAxisIndex: 2, color: LIDAR_SIGNAL_COLOR},
             ]
         },
-       view: {columns: [TIMESTAMP, STATION_TEMP, AIR_TEMP, SNOW_TEMP, SNOW_DEPTH]}
+       view: {columns: [TIMESTAMP, STATION_TEMP, AIR_TEMP, SNOW_TEMP, SNOW_DEPTH, LIDAR_SIGNAL]}
     });
 
     // Fire up the dashboard
