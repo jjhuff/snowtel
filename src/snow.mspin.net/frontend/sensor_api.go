@@ -321,6 +321,7 @@ func (app *AppContext) AdjustReadings(w rest.ResponseWriter, req *rest.Request) 
 			q = q.Filter("timestamp >", after)
 		} else {
 			rest.Error(w, "Failed to parse param: after", http.StatusBadRequest)
+			return
 		}
 	}
 
@@ -331,6 +332,7 @@ func (app *AppContext) AdjustReadings(w rest.ResponseWriter, req *rest.Request) 
 			q = q.Filter("timestamp <=", before)
 		} else {
 			rest.Error(w, "Failed to parse param: before", http.StatusBadRequest)
+			return
 		}
 	}
 
