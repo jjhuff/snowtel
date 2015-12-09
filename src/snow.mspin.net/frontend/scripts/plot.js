@@ -65,15 +65,18 @@ function getDataTable(readings) {
 
         // Temp readings
         var station_temp = UNITS[selected_units].temp.convert(r.station_temp);
+        if (station_temp < -1000) {
+            station_temp = null;
+        }
         var air_temp = UNITS[selected_units].temp.convert(r.ambient_temp);
         var surface_temp = UNITS[selected_units].temp.convert(r.surface_temp);
-        //surface_temp = surface_temp_filter.add(surface_temp);
+        surface_temp = surface_temp_filter.add(surface_temp);
 
         // Snow depth
         var d = r.snow_depth;
         var snow_depth;
-        if(d>0 || true) {
-            //d = depth_filter.add(d);
+        if(d>0) {
+            d = depth_filter.add(d);
             snow_depth = UNITS[selected_units].dist.convert(d);
         } else {
             depth_filter.add(null);
