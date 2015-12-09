@@ -353,8 +353,10 @@ func (app *AppContext) AdjustReadings(w rest.ResponseWriter, req *rest.Request) 
 		return
 	}
 
+	ctx.Infof("Found %d records", len(readings))
+
 	for i, r := range readings {
-		if r.SensorHeight == float32(oldHeight) || r.SensorHeight == 0 {
+		if r.SensorHeight == float32(oldHeight) {
 			r.SensorHeight = float32(newHeight)
 			r.SnowDepth += float32(delta)
 			//ctx.Infof("Adjust: %v Depth:%f SensorHeight:%f", r.Timestamp, r.SnowDepth, r.SensorHeight)
