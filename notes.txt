@@ -1,0 +1,2 @@
+
+curl -X PUT -d old_height=190 -d new_height=200 -d after=2015-10-01T00:00:00Z 'http://snow.mspin.net/_/api/v1/sensors/53ff6d066667574821411267/adjust'
