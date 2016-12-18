@@ -7,6 +7,7 @@ import (
 
 	"encoding/json"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,16 +27,26 @@ type Sensor struct {
 
 const sensorEntityKind = "Sensor"
 
+type NullableFloat float32
+
+func (v NullableFloat) MarshalJSON() ([]byte, error) {
+	if math.IsNaN(float64(v)) {
+		return json.Marshal(nil)
+	} else {
+		return json.Marshal(float32(v))
+	}
+}
+
 type Reading struct {
 	Sensor       *datastore.Key `json:"-" datastore:"sensor"`
 	Timestamp    time.Time      `json:"timestamp" datastore:"timestamp"`
-	AmbientTemp  float32        `json:"ambient_temp" datastore:"ambient_temp,noindex"`
-	SurfaceTemp  float32        `json:"surface_temp" datastore:"surface_temp,noindex"`
-	HeadTemp     float32        `json:"head_temp" datastore:"head_temp,noindex"`
-	StationTemp  float32        `json:"station_temp" datastore:"station_temp,noindex"`
+	AmbientTemp  NullableFloat  `json:"ambient_temp" datastore:"ambient_temp,noindex"`
+	SurfaceTemp  NullableFloat  `json:"surface_temp" datastore:"surface_temp,noindex"`
+	HeadTemp     NullableFloat  `json:"head_temp" datastore:"head_temp,noindex"`
+	StationTemp  NullableFloat  `json:"station_temp" datastore:"station_temp,noindex"`
 	SnowDepth    float32        `json:"snow_depth" datastore:"snow_depth,noindex"`
 	SensorHeight float32        `json:"-" datastore:"sensor_height,noindex"`
-	LIDARSignal  float32        `json:"lidar_signal" datastore:",noindex"`
+	LIDARSignal  NullableFloat  `json:"lidar_signal" datastore:",noindex"`
 }
 
 const readingEntityKind = "Reading"
@@ -64,12 +75,12 @@ func getWeatherUndergroundTemp(ctx appengine.Context, stationId string) (float32
 	client := urlfetch.Client(ctx)
 	resp, err := client.Get("https://api.wunderground.com/api/" + config.Get(ctx).WeatherUndergroundKey + "/conditions/q/" + stationId + ".json")
 	if err != nil {
-		return 0, err
+		return float32(math.NaN()), err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return 0, err
+		return float32(math.NaN()), err
 	}
 
 	var responseJSON struct {
@@ -80,7 +91,7 @@ func getWeatherUndergroundTemp(ctx appengine.Context, stationId string) (float32
 
 	err = json.Unmarshal(body, &responseJSON)
 	if err != nil {
-		return 0, err
+		return float32(math.NaN()), err
 	}
 	return responseJSON.CurrentObservation.Temperature, nil
 }
@@ -174,6 +185,7 @@ func (app *AppContext) GetReadings(w rest.ResponseWriter, req *rest.Request) {
 
 	var readings []Reading = make([]Reading, 0)
 	_, err := q.Limit(2500).GetAll(ctx, &readings)
+	ctx.Infof("Found %d readings.", len(readings))
 
 	if err != nil {
 		if _, ok := err.(*datastore.ErrFieldMismatch); !ok {
@@ -181,6 +193,9 @@ func (app *AppContext) GetReadings(w rest.ResponseWriter, req *rest.Request) {
 			return
 		}
 	}
+	b, err := json.Marshal(readings)
+	ctx.Infof("Marshaling: %d %v", len(b), err)
+
 	w.WriteJson(readings)
 }
 
@@ -194,11 +209,20 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 	}
 
 	// Helper to parse a float form field
+	getNullableFloat := func(field string) (NullableFloat, error) {
+		f, err := strconv.ParseFloat(req.FormValue(field), 32)
+		if err != nil {
+			rest.Error(w, "Bad param: "+field, http.StatusBadRequest)
+			return NullableFloat(math.NaN()), err
+		} else {
+			return NullableFloat(f), nil
+		}
+	}
 	getFloat := func(field string) (float32, error) {
 		f, err := strconv.ParseFloat(req.FormValue(field), 32)
 		if err != nil {
 			rest.Error(w, "Bad param: "+field, http.StatusBadRequest)
-			return 0, err
+			return float32(math.NaN()), err
 		} else {
 			return float32(f), nil
 		}
@@ -207,21 +231,23 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 	// Parse reading data
 	var err error
 	reading := Reading{
-		Sensor:    datastore.NewKey(ctx, sensorEntityKind, sensorId, 0, nil),
-		Timestamp: time.Now(),
+		Sensor:      datastore.NewKey(ctx, sensorEntityKind, sensorId, 0, nil),
+		Timestamp:   time.Now(),
+		LIDARSignal: NullableFloat(math.NaN()),
+		StationTemp: NullableFloat(math.NaN()),
 	}
 
-	if reading.AmbientTemp, err = getFloat("ambient_temp"); err != nil {
+	if reading.AmbientTemp, err = getNullableFloat("ambient_temp"); err != nil {
 		return
 	}
-	if reading.SurfaceTemp, err = getFloat("surface_temp"); err != nil {
+	if reading.SurfaceTemp, err = getNullableFloat("surface_temp"); err != nil {
 		return
 	}
-	if reading.HeadTemp, err = getFloat("head_temp"); err != nil {
+	if reading.HeadTemp, err = getNullableFloat("head_temp"); err != nil {
 		return
 	}
 	if req.FormValue("lidar_signal") != "" {
-		if reading.LIDARSignal, err = getFloat("lidar_signal"); err != nil {
+		if reading.LIDARSignal, err = getNullableFloat("lidar_signal"); err != nil {
 			return
 		}
 	}
@@ -253,9 +279,11 @@ func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
 
 	// Fetch info from WeatherUnderground
 	if sensor.WeatherUndergroundStationId != "" {
-		reading.StationTemp, err = getWeatherUndergroundTemp(ctx, sensor.WeatherUndergroundStationId)
+		t, err := getWeatherUndergroundTemp(ctx, sensor.WeatherUndergroundStationId)
 		if err != nil {
 			ctx.Warningf("Failed to read station temp: %s", err.Error())
+		} else {
+			reading.StationTemp = NullableFloat(t)
 		}
 	}
 
@@ -356,10 +384,76 @@ func (app *AppContext) AdjustReadings(w rest.ResponseWriter, req *rest.Request) 
 	ctx.Infof("Found %d records", len(readings))
 
 	for i, r := range readings {
-		if r.SensorHeight == float32(oldHeight) {
+		if math.Abs(float64(r.SensorHeight)-oldHeight) < 1 {
 			r.SensorHeight = float32(newHeight)
 			r.SnowDepth += float32(delta)
 			//ctx.Infof("Adjust: %v Depth:%f SensorHeight:%f", r.Timestamp, r.SnowDepth, r.SensorHeight)
+			_, err = datastore.Put(ctx, keys[i], &r)
+			if err != nil {
+				ctx.Warningf("Put err: %s, %v", keys[i], err)
+				rest.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+}
+
+func (app *AppContext) FixReadings(w rest.ResponseWriter, req *rest.Request) {
+	ctx := appengine.NewContext(req.Request)
+
+	sensorId := req.PathParam("id")
+	if sensorId == "" {
+		rest.Error(w, "Missing sensor id", http.StatusBadRequest)
+		return
+	}
+	sensorKey := datastore.NewKey(ctx, sensorEntityKind, sensorId, 0, nil)
+
+	q := datastore.NewQuery(readingEntityKind).Filter("sensor =", sensorKey)
+
+	afterStr := req.FormValue("after")
+	if afterStr != "" {
+		after, err := time.Parse(time.RFC3339Nano, afterStr)
+		if err == nil {
+			q = q.Filter("timestamp >", after)
+		} else {
+			rest.Error(w, "Failed to parse param: after", http.StatusBadRequest)
+			return
+		}
+	}
+
+	beforeStr := req.FormValue("before")
+	if beforeStr != "" {
+		before, err := time.Parse(time.RFC3339Nano, beforeStr)
+		if err == nil {
+			q = q.Filter("timestamp <=", before)
+		} else {
+			rest.Error(w, "Failed to parse param: before", http.StatusBadRequest)
+			return
+		}
+	}
+
+	var readings []Reading = make([]Reading, 0)
+	keys, err := q.GetAll(ctx, &readings)
+	if err != nil {
+		ctx.Warningf("GetAll Error: %v", err)
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ctx.Infof("Found %d records", len(readings))
+
+	for i, r := range readings {
+		changed := false
+		if r.StationTemp == 0 {
+			r.StationTemp = NullableFloat(math.NaN())
+			changed = true
+		}
+		if r.LIDARSignal == 0 {
+			r.LIDARSignal = NullableFloat(math.NaN())
+			changed = true
+		}
+
+		if changed {
 			_, err = datastore.Put(ctx, keys[i], &r)
 			if err != nil {
 				ctx.Warningf("Put err: %s, %v", keys[i], err)

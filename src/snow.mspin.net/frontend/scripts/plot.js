@@ -75,7 +75,7 @@ function getDataTable(readings) {
         // Snow depth
         var d = r.snow_depth;
         var snow_depth;
-        if(d>0) {
+        if(true || d>0) {
             d = depth_filter.add(d);
             snow_depth = UNITS[selected_units].dist.convert(d);
         } else {
