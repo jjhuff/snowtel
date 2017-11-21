@@ -2,11 +2,13 @@
     <div class="container">
         <h1>{{sensor.name}}</h1>
         <dl class="current_conditions dl-horizontal">
-            <dt>Air Temp</dt>
-            <dd>
+            <div ng-if='!readings[0].station_temp'>
+                <dt>Air Temp</dt>
+                <dd>
                 <span>{{readings[0].ambient_temp|number:1}}&deg;C</span>
                 <span>{{readings[0].ambient_temp|c2f|number:1}}&deg;F</span>
-            </dd>
+                </dd>
+            </div>
             <div ng-if='readings[0].station_temp'>
                 <dt>Weather Station</dt>
                 <dd>

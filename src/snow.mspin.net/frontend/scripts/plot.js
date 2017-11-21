@@ -49,7 +49,7 @@ function getDataTable(readings) {
     data.addColumn('number', 'Snow Depth');
     data.addColumn('number', 'LIDAR Signal');
 
-    var depth_filter = new MedianFilter(4);
+    var depth_filter = new MedianFilter(6);
     var surface_temp_filter = new MeanFilter(4);
 
     var last_dt =  new Date(readings[0].timestamp);
@@ -172,13 +172,13 @@ function drawVisualization(readings) {
             ],
             series: [
                 {targetAxisIndex: 0, color: STATION_TEMP_COLOR},
-                {targetAxisIndex: 0, color: AIR_TEMP_COLOR},
+                //{targetAxisIndex: 0, color: AIR_TEMP_COLOR},
                 {targetAxisIndex: 0, color: SNOW_TEMP_COLOR},
                 {targetAxisIndex: 1, color: SNOW_HEIGHT_COLOR},
-                {targetAxisIndex: 2, color: LIDAR_SIGNAL_COLOR},
+                //{targetAxisIndex: 2, color: LIDAR_SIGNAL_COLOR},
             ]
         },
-       view: {columns: [TIMESTAMP, STATION_TEMP, AIR_TEMP, SNOW_TEMP, SNOW_DEPTH, LIDAR_SIGNAL]}
+       view: {columns: [TIMESTAMP, STATION_TEMP, /*AIR_TEMP,*/ SNOW_TEMP, SNOW_DEPTH, /*LIDAR_SIGNAL*/]}
     });
 
     // Fire up the dashboard
