@@ -309,6 +309,28 @@ func (app *AppContext) DeleteReadings(w rest.ResponseWriter, req *rest.Request) 
 		Filter("sensor =", sensorKey).
 		KeysOnly()
 
+	afterStr := req.FormValue("after")
+	if afterStr != "" {
+		after, err := time.Parse(time.RFC3339Nano, afterStr)
+		if err == nil {
+			q = q.Filter("timestamp >", after)
+		} else {
+			rest.Error(w, "Failed to parse param: after", http.StatusBadRequest)
+			return
+		}
+	}
+
+	beforeStr := req.FormValue("before")
+	if beforeStr != "" {
+		before, err := time.Parse(time.RFC3339Nano, beforeStr)
+		if err == nil {
+			q = q.Filter("timestamp <=", before)
+		} else {
+			rest.Error(w, "Failed to parse param: before", http.StatusBadRequest)
+			return
+		}
+	}
+
 	keys, err := q.GetAll(ctx, nil)
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
