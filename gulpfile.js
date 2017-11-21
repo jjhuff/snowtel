@@ -134,12 +134,12 @@ gulp.task('watch', ['build'], function() {
 gulp.task('server', ['watch'], function(){
     var cfg = [].concat(paths.ae.modules, "./dispatch.yaml");
     gulp.src('').pipe(shell([
-        'goapp serve --port='+options.devserver_port+' --admin_port='+options.admin_port+' ' + cfg.join(' ')
+        'goapp serve --host=0.0.0.0 --port='+options.devserver_port+' --admin_port='+options.admin_port+' ' + cfg.join(' ')
     ]));
 });
 
 gulp.task('deploy', ['build'], function(){
-    var appcfg = 'stdbuf -o0 -e0 python2.7 ~/go_appengine/appcfg.py --noauth_local_webserver -A methowsnow ';
+    var appcfg = 'stdbuf -o0 -e0 python2.7 /usr/local/go_appengine/appcfg.py --noauth_local_webserver -A methowsnow ';
     gulp.src('').pipe(shell([
         appcfg + 'update_indexes .',
         appcfg + 'update ' + paths.ae.modules.join(' '),
