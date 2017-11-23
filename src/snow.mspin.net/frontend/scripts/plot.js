@@ -49,8 +49,9 @@ function getDataTable(readings) {
     data.addColumn('number', 'Snow Depth');
     data.addColumn('number', 'LIDAR Signal');
 
-    var depth_filter = new MedianFilter(6);
-    var surface_temp_filter = new MeanFilter(4);
+    var depth_filter = new MeanFilter(3);
+    var surface_temp_filter = new MedianFilter(3);
+    var station_temp_filter = new MedianFilter(3);
 
     var last_dt =  new Date(readings[0].timestamp);
     for (var i=0; i<readings.length; i++) {
@@ -68,7 +69,10 @@ function getDataTable(readings) {
         if (station_temp < -1000) {
             station_temp = null;
         }
+        station_temp = station_temp_filter.add(station_temp);
+
         var air_temp = UNITS[selected_units].temp.convert(r.ambient_temp);
+
         var surface_temp = UNITS[selected_units].temp.convert(r.surface_temp);
         surface_temp = surface_temp_filter.add(surface_temp);
 
