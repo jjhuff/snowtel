@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"cloud.google.com/go/datastore"
 	"github.com/ant0ine/go-json-rest/rest"
@@ -20,55 +18,22 @@ type AppContext struct {
 	Datastore *datastore.Client
 }
 
-var fileHashes = make(map[string]string)
-
-var templateFuncs = template.FuncMap{
-	"static": func(name string) string {
-		if v, ok := fileHashes[name]; ok {
-			return v
-		} else {
-			return name
-		}
-	},
-}
-
-//var indexTmpl = template.Must(template.New("index.html").Funcs(templateFuncs).ParseFiles("html/index.html"))
-
 type indexArgs struct {
 	Config config.Config
 }
 
-func (app *AppContext) handleIndex(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Cache-Control", "private, max-age=0, no-cache")
-
-	/*data := indexArgs{
-		Config: app.Config,
-	}
-
-	if err := indexTmpl.Execute(w, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}*/
-
-}
-
-func loadFileHashes(fname string) {
-	file, err := ioutil.ReadFile(fname)
-	if err != nil {
-		panic("Failed to load: " + fname)
-	}
-
-	var hashes map[string]string
-	err = json.Unmarshal(file, &hashes)
-	if err != nil {
-		panic("Failed to parse: " + fname)
-	}
-
-	for k, v := range hashes {
-		fileHashes[k] = v
-	}
-}
-
 func main() {
+
+	wd, _ := os.Getwd()
+	log.Printf("cwd: %s", wd)
+	filepath.Walk("/app/",
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			log.Println(path, info.Size())
+			return nil
+		})
 
 	app := &AppContext{
 		Config: config.Get(),
@@ -78,10 +43,6 @@ func main() {
 		log.Fatalf("Error making datastore connection: %s", err)
 	}
 	app.Datastore = dsClient
-
-	//loadFileHashes("build/appjs-manifest.json")
-	//loadFileHashes("build/libjs-manifest.json")
-	//loadFileHashes("build/css-manifest.json")
 
 	restHandler := rest.ResourceHandler{
 		EnableRelaxedContentType: true,
@@ -98,7 +59,8 @@ func main() {
 	)
 	http.Handle("/_/api/v1/", http.StripPrefix("/_/api/v1", &restHandler))
 
-	http.HandleFunc("/", app.handleIndex)
+	fs := http.FileServer(http.Dir("/app/static"))
+	http.Handle("/", fs)
 
 	port := os.Getenv("PORT")
 	if port == "" {

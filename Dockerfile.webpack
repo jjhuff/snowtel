@@ -1,0 +1,16 @@
+FROM node:15.4.0-buster
+
+#########################
+
+#install our Node deps
+WORKDIR /
+COPY js/package*.json /
+RUN npm install
+ENV PATH=/node_modules/.bin/:$PATH
+
+# Copy over code
+RUN mkdir -p /code/js
+WORKDIR /code/js
+COPY js/ .
+
+ENTRYPOINT ["webpack"]
