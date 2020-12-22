@@ -10,31 +10,46 @@ import Typography from "@material-ui/core/Typography";
 
 export default function SensorDetail() {
   const [error, setError] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [data, setData] = useState({});
+
+  const [isDetailsLoaded, setIsDetailsLoaded] = useState(false);
+  const [isReadingsLoaded, setIsReadingsLoaded] = useState(false);
+
+  const [details, setDetails] = useState({});
+  const [readings, setReadings] = useState([]);
+
   let { id } = useParams();
 
+  // Load details
   useEffect(() => {
       const apiUrl = `/_/api/v1/sensors/${id}`;
       axios.get(apiUrl).then((result) => {
-          setIsLoaded(true);
-          setData(result.data);
+          setIsDetailsLoaded(true);
+          setDetails(result.data);
         }
       )
-  }, [])
+  }, [id])
+
+  // Load details
+  useEffect(() => {
+      const apiUrl = `/_/api/v1/sensors/${id}/readings`;
+      axios.get(apiUrl).then((result) => {
+          setIsReadingsLoaded(true);
+          setReadings(result.data);
+        }
+      )
+  }, [id])
 
   if (error) {
     return <div>Error: {error.message}</div>;
-  } else if (!isLoaded) {
+  } else if (!isDetailsLoaded) {
     return <CircularProgress />
   } else {
     return (
         <div>
             <Typography component="h1">
-                {data.name}
+                {details.name}
             </Typography>
-          
-      </div>
+        </div>
     );
   }
 }
