@@ -22,6 +22,10 @@ type indexArgs struct {
 	Config config.Config
 }
 
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "/app/static/index.html")
+}
+
 func main() {
 
 	wd, _ := os.Getwd()
@@ -60,7 +64,9 @@ func main() {
 	http.Handle("/_/api/v1/", http.StripPrefix("/_/api/v1", &restHandler))
 
 	fs := http.FileServer(http.Dir("/app/static"))
-	http.Handle("/", fs)
+	http.Handle("/_/static/", http.StripPrefix("/_/static", fs))
+
+	http.HandleFunc("/", IndexHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
