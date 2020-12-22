@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios"
+import { Link as RouterLink } from 'react-router-dom';
+import Link from '@material-ui/core/Link';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
-function SensorList() {
+export default function SensorList() {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [items, setItems] = useState([]);
@@ -18,18 +21,18 @@ function SensorList() {
   if (error) {
     return <div>Error: {error.message}</div>;
   } else if (!isLoaded) {
-    return <div>Loading...</div>;
+    return <CircularProgress />
   } else {
     return (
-      <ul>
+      <div>
         {items.map(item => (
-          <li key={item.id}>
-              <a href={`/sensor/${item.id}`}>{item.name}</a>
-          </li>
+          <div key={item.id}>
+              <Link to={`/sensor/${item.id}`} component={RouterLink}>
+                  {item.name}
+              </Link>
+          </div>
         ))}
-      </ul>
+      </div>
     );
   }
 }
-
-export default SensorList;
