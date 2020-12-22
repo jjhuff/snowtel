@@ -12,7 +12,7 @@ logs: _docker_gcloud
 	$(DOCKER_RUN) -i  methowsnow_gcloud app logs tail
 
 run: _docker_frontend
-	$(DOCKER_RUN) -i -p 8080:8080 methowsnow_frontend
+	$(DOCKER_RUN) -i -p 8080:8080 -v $(ROOT_DIR)/js/dist:/app/static methowsnow_frontend
 
 gcloud: _docker_gcloud
 	$(DOCKER_RUN) -i --entrypoint= methowsnow_gcloud /bin/bash
@@ -21,7 +21,7 @@ webpack_shell: _docker_webpack
 	$(DOCKER_RUN) -i --entrypoint= methowsnow_webpack /bin/bash
 
 webpack: _docker_webpack
-	$(DOCKER_RUN) -i methowsnow_webpack --mode development
+	$(DOCKER_RUN) -it methowsnow_webpack --mode development --watch
 
 
 login: ## Login to various Google stuff

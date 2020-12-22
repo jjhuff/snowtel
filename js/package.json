@@ -1,9 +1,8 @@
 {
   "name": "snowtel",
   "version": "1.0.0",
-  "main": "src/index.js",
-  "scripts": {
-  },
+  "main": "src/index.jsx",
+  "scripts": {},
   "author": "Justin Huff <jjhuff@mspin.net>",
   "license": "ISC",
   "description": "",
@@ -26,7 +25,9 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
+    "axios": "^0.21.0",
     "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react-dom": "^17.0.1",
+    "react-router-dom": "^5.2.0"
   }
 }

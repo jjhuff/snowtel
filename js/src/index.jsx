@@ -1,12 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import './index.css';
+import SensorList from "./components/SensorList.jsx";
+import "./index.css";
 
 const App = () => {
   return (
     <div>
-        <div>Welcome to my-webpack-react-starter</div>
+        <SensorList/>
     </div>
   );
 };
