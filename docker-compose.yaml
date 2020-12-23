@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+  frontend:
+    image: methowsnow_frontend
+    user: ${CURRENT_UID}
+    volumes:
+    - ~/.config/gcloud:/.config/gcloud
+    - ./js/dist:/app/static
+    environment:
+    - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}    
+    ports:
+    - "8080:8080"
+  
+  webpack:
+    image: methowsnow_webpack
+    user: ${CURRENT_UID}
+    init: true
+    volumes:
+    - .:/code
+    command: --mode development --watch

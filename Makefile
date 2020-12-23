@@ -1,5 +1,5 @@
-GOOGLE_CLOUD_PROJECT := methowsnow
-CURRENT_UID := $(shell id -u):$(shell id -g)
+export GOOGLE_CLOUD_PROJECT := methowsnow
+export CURRENT_UID := $(shell id -u):$(shell id -g)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 include docker.mk
@@ -10,6 +10,9 @@ deploy: _docker_gcloud
 
 logs: _docker_gcloud
 	$(DOCKER_RUN) -i  methowsnow_gcloud app logs tail
+
+start: _docker_frontend _docker_webpack
+	docker-compose up
 
 run: _docker_frontend
 	$(DOCKER_RUN) -i -p 8080:8080 -v $(ROOT_DIR)/js/dist:/app/static methowsnow_frontend
