@@ -191,6 +191,12 @@ func (app *AppContext) GetReadings(w rest.ResponseWriter, req *rest.Request) {
 			return
 		}
 	}
+
+	// Round the time somewhat
+	for i, r := range readings {
+		readings[i].Timestamp = r.Timestamp.Round(time.Minute)
+	}
+
 	b, err := json.Marshal(readings)
 	log.Printf("Marshaling: %d %v", len(b), err)
 
