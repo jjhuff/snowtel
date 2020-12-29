@@ -16,7 +16,7 @@ export default function CurrentReading(props) {
     return (
         <React.Fragment>
             <Typography>
-                Timestamp: {cur.timestamp}
+                Timestamp: {new Date(cur.timestamp).toLocaleString()}
             </Typography>
             <Typography>
                 Depth: <Units.Dist val={cur.snow_depth}/>
