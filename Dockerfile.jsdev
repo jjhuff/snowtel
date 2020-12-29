@@ -1,6 +1,7 @@
+# vim: set ft=dockerfile:
 FROM node:15.4.0-buster
 
-#########################
+RUN echo "export PS1='\[\e[0;35m\]jsdev\[\e[0m\]:\[\e[0;32m\]\w\[\e[0m\]\$ '" >> /etc/bash.bashrc
 
 #install our Node deps
 WORKDIR /

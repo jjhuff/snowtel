@@ -4,29 +4,21 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 include docker.mk
 
-deploy: _docker_gcloud
-	$(DOCKER_RUN) -i  methowsnow_gcloud gcloud builds submit
-	$(DOCKER_RUN) -i  methowsnow_gcloud gcloud run deploy frontend \
-		--image gcr.io/methowsnow/frontend \
-		--platform managed \
-		--allow-unauthenticated \
-		--region=us-central1 \
-		--set-env-vars "GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}"
-
-logs: _docker_gcloud
-	$(DOCKER_RUN) -i  methowsnow_gcloud gcloud app logs tail
-
-run: _docker_godev _docker_webpack
+run: ## Start the app
+run: _docker_godev _docker_jsdev
 	docker-compose up
 
+godev: ## Start a go dev shell
 godev: _docker_godev
 	$(DOCKER_RUN) -i methowsnow_godev /bin/bash
 
+gcloud: ## Start a gcloud shell
 gcloud: _docker_gcloud
 	$(DOCKER_RUN) -i methowsnow_gcloud /bin/bash
 
-webpack: _docker_webpack
-	$(DOCKER_RUN) -i methowsnow_webpack /bin/bash
+jsdev: ## Start a js dev shell
+jsdev: _docker_jsdev
+	$(DOCKER_RUN) -i methowsnow_jsdev /bin/bash
 
 login: ## Login to various Google stuff
 	gcloud config set project $(GOOGLE_CLOUD_PROJECT)

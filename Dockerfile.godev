@@ -2,6 +2,8 @@
 FROM golang:1.15-buster as builder
 ENV GOCACHE /go/cache
 
+RUN echo "export PS1='\[\e[0;35m\]godev\[\e[0m\]:\[\e[0;32m\]\w\[\e[0m\]\$ '" >> /etc/bash.bashrc
+
 WORKDIR /code/go/snow.mspin.net
 COPY go/snow.mspin.net/go.* ./
 RUN go mod download && \

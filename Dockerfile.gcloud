@@ -1,2 +1,5 @@
+# vim: set ft=dockerfile:
 FROM google/cloud-sdk:319.0.0
+
 WORKDIR /code
+RUN echo "export PS1='\[\e[0;35m\]gcloud\[\e[0m\]:\[\e[0;32m\]\w\[\e[0m\]\$ '" >> /etc/bash.bashrc

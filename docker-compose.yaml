@@ -14,7 +14,7 @@ services:
     - "8080:8080"
   
   webpack:
-    image: methowsnow_webpack
+    image: methowsnow_jsdev
     user: ${CURRENT_UID}
     init: true
     volumes:
