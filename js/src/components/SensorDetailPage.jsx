@@ -44,18 +44,6 @@ export default function SensorDetailPage() {
 
   let { id } = useParams();
 
-  const fetchReadings = () => {
-      var dateOffset = (60*60*1000) * timeRange;
-      var afterDate = new Date();
-      afterDate.setTime(afterDate.getTime() - dateOffset);
-      const apiUrl = `/_/api/v1/sensors/${id}/readings?after=${afterDate.toISOString()}`;
-      axios.get(apiUrl).then((result) => {
-          setReadings(result.data);
-          setIsReadingsLoaded(true);
-        }
-      )
-  }
-
   // Load details
   useEffect(() => {
       const apiUrl = `/_/api/v1/sensors/${id}`;
@@ -66,7 +54,21 @@ export default function SensorDetailPage() {
       )
   }, [id])
 
-  // Load details
+  // Load readings
+  async function fetchReadings(){
+      const dateOffset = (60*60*1000) * timeRange;
+      let afterDate = new Date();
+      afterDate.setTime(afterDate.getTime() - dateOffset)
+      afterDate.setSeconds(0);
+      afterDate.setMilliseconds(0);
+      const apiUrl = `/_/api/v1/sensors/${id}/readings?after=${afterDate.toISOString()}`;
+
+      const result = await axios.get(apiUrl);
+
+      setReadings(result.data);
+      setIsReadingsLoaded(true);
+  }
+
   useEffect(() => {
       fetchReadings();
       const interval = setInterval(fetchReadings, refreshInterval*1000);

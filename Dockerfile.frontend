@@ -17,7 +17,7 @@ FROM node:15.4.0-buster as webpack
 WORKDIR /code/js
 COPY js/ .
 RUN yarn --frozen-lockfile --no-cache
-RUN ./node_modules/.bin/webpack --mode production
+RUN ./node_modules/.bin/webpack --mode development
 
 ########
 # Build the final image
