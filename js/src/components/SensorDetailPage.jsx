@@ -31,6 +31,8 @@ export default function SensorDetailPage() {
   const [details, setDetails] = useState({});
   const [readings, setReadings] = useState([]);
 
+  const curUnits = units.imperial;
+
   let { id } = useParams();
 
   // Load details
@@ -56,15 +58,60 @@ export default function SensorDetailPage() {
       )
   }, [id])
 
-  let chartData = [
+  let depthChartData = [
       {
-          id: 0,
+          id: "Depth",
           data: readings.map((r) => ({
               x: r.timestamp,
-              y: units.imperial.dist.convert(r.snow_depth),
+              y: curUnits.dist.convert(r.snow_depth),
           })),
       }
   ];
+
+  let tempChartData = [
+      {
+          id: "Surface",
+          data: readings.map((r) => ({
+              x: r.timestamp,
+              y: curUnits.temp.convert(r.surface_temp),
+          })),
+      },
+      {
+          id: "Ambient",
+          data: readings.map((r) => ({
+              x: r.timestamp,
+              y: curUnits.temp.convert(r.ambient_temp),
+          })),
+      }
+  ];
+
+  const sharedChartProps = {
+      margin:{ top: 50, right: 60, bottom: 50, left: 50 },
+      curve:"step",
+      enablePoints: false,
+      isInteractive: false,
+      xScale:{ format: "%Y-%m-%dT%H:%M:%S%Z", type: "time" },
+      xFormat:"time:%Y-%m-%d",
+      yScale:{
+          type: "linear",
+          min: "auto",
+          max: "auto",
+      },
+      axisBottom:{
+          format: "%Y-%m-%d %H:%M",
+          tickValues: 5,
+      },
+      legends:[
+          {
+              anchor: 'top-left',
+              direction: 'row',
+              justify: false,
+              itemHeight: 20,
+              itemWidth: 120,
+              translateY: -30,
+          }
+      ],
+  }
 
   if (error) {
     return <div>Error: {error.message}</div>;
@@ -78,21 +125,8 @@ export default function SensorDetailPage() {
             </Typography>
             <CurrentReading reading={readings[0]}/>
             <div className={classes.chartContainer}>
-                <ResponsiveLine
-                data={chartData}
-                margin={{ top: 50, right: 160, bottom: 50, left: 60 }}
-                xScale={{ format: "%Y-%m-%dT%H:%M:%S%Z", type: "time" }}
-                xFormat="time:%Y-%m-%d"
-                yScale={{
-                    type: "linear",
-                    min: "auto",
-                    max: "auto",
-                }}
-                axisTop={null}
-                axisBottom={{
-                    format: "%Y-%m-%d %H:%M",
-                    tickValues: 5,
-                }}
+                <ResponsiveLine {...sharedChartProps}
+                data={depthChartData}
                 axisLeft={{
                     tickValues: 5,
                     tickSize: 5,
@@ -103,6 +137,28 @@ export default function SensorDetailPage() {
                     legendOffset: -40,
                     legendPosition: "middle"
                 }}
+                />
+            </div>
+            <div className={classes.chartContainer}>
+                <ResponsiveLine {...sharedChartProps}
+                data={tempChartData}
+                axisLeft={{
+                    tickValues: 5,
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    format: ".2",
+                    legend: "Temp",
+                    legendOffset: -40,
+                    legendPosition: "middle"
+                }}
+                markers={[
+                    {
+                        axis: 'y',
+                        value: curUnits.temp.convert(0),
+                        lineStyle: { stroke: '#3030dd', strokeWidth: 2 },
+                    }
+                ]}
                 />
             </div>
         </div>
