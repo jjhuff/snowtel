@@ -1,4 +1,5 @@
-go/vendor/
+go/.cache
+go/pkg
 
 js/node_modules
 

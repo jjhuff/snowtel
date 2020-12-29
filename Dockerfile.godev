@@ -1,0 +1,7 @@
+# vim: set ft=dockerfile:
+FROM golang:1.15-buster as builder
+ENV GOCACHE /go/cache
+
+WORKDIR /code/go/snow.mspin.net
+#COPY go/snow.mspin.net/go.* ./
+#RUN go mod download

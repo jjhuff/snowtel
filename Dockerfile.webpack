@@ -5,12 +5,10 @@ FROM node:15.4.0-buster
 #install our Node deps
 WORKDIR /
 COPY js/package.json js/yarn.lock* /
-RUN yarn --frozen-lockfile --no-cache
+RUN yarn --no-cache
 ENV PATH=/node_modules/.bin/:$PATH
 
 # Copy over code
-RUN mkdir -p /code/js
+#RUN mkdir -p /code/js
 WORKDIR /code/js
-COPY js/ .
-
-ENTRYPOINT ["webpack"]
+#COPY js/ .

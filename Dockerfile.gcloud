@@ -1,3 +1,2 @@
 FROM google/cloud-sdk:319.0.0
-
-ENTRYPOINT ["gcloud"]
+WORKDIR /code

@@ -1,5 +1,4 @@
 # vim: set ft=dockerfile:
-
 FROM golang:1.15-buster as builder
 
 WORKDIR /app
@@ -8,9 +7,21 @@ COPY go/snow.mspin.net/go.* ./
 RUN go mod download
 
 COPY go/snow.mspin.net/ ./
-
 RUN go build -mod=readonly -v -o frontend cmd/frontend/*.go
 
+########
+# Build the static content
+FROM node:15.4.0-buster as webpack
+
+#install our Node deps
+WORKDIR /code/js
+COPY js/ .
+RUN yarn --frozen-lockfile --no-cache
+#RUN mkdir -p /code/js
+RUN ./node_modules/.bin/webpack --mode production
+
+########
+# Build the final image
 FROM debian:buster-slim
 RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     ca-certificates && \
@@ -19,6 +30,6 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
 RUN mkdir -p /app/static
 
 COPY --from=builder /app/frontend /app/frontend
-COPY js/dist/* /app/static
+COPY --from=webpack /code/js/dist /app/static
 
 CMD ["/app/frontend"]

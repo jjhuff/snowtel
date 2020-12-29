@@ -74,6 +74,9 @@ export default function SensorDetail() {
                 {details.name}
             </Typography>
             <Typography>
+                Timestamp: {readings[0].timestamp}
+            </Typography>
+            <Typography>
                 Depth: {readings[0].snow_depth}
             </Typography>
             <Typography>

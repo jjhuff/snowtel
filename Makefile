@@ -4,28 +4,32 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 include docker.mk
 
-
 deploy: _docker_gcloud
-	$(DOCKER_RUN) -i  methowsnow_gcloud app deploy go/snow.mspin.net/frontend/app.yaml
+	$(DOCKER_RUN) -i  methowsnow_gcloud gcloud builds submit
+	$(DOCKER_RUN) -i  methowsnow_gcloud gcloud run deploy frontend \
+		--image gcr.io/methowsnow/frontend \
+		--platform managed \
+		--allow-unauthenticated \
+		--region=us-central1 \
+		--set-env-vars "GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}"
 
 logs: _docker_gcloud
-	$(DOCKER_RUN) -i  methowsnow_gcloud app logs tail
+	$(DOCKER_RUN) -i  methowsnow_gcloud gcloud app logs tail
 
-start: _docker_frontend _docker_webpack
+start: _docker_godev _docker_webpack
 	docker-compose up
 
-run: _docker_frontend
-	$(DOCKER_RUN) -i -p 8080:8080 -v $(ROOT_DIR)/js/dist:/app/static methowsnow_frontend
+stop:
+	docker-compose down
+
+godev: _docker_godev
+	$(DOCKER_RUN) -i methowsnow_godev /bin/bash
 
 gcloud: _docker_gcloud
-	$(DOCKER_RUN) -i --entrypoint= methowsnow_gcloud /bin/bash
-
-webpack_shell: _docker_webpack
-	$(DOCKER_RUN) -i --entrypoint= methowsnow_webpack /bin/bash
+	$(DOCKER_RUN) -i methowsnow_gcloud /bin/bash
 
 webpack: _docker_webpack
-	$(DOCKER_RUN) -it methowsnow_webpack --mode development --watch
-
+	$(DOCKER_RUN) -i methowsnow_webpack /bin/bash
 
 login: ## Login to various Google stuff
 	gcloud config set project $(GOOGLE_CLOUD_PROJECT)

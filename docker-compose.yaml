@@ -1,9 +1,11 @@
 version: "3.7"
 services:
   frontend:
-    image: methowsnow_frontend
+    image: methowsnow_godev
+    command: go run ./cmd/frontend
     user: ${CURRENT_UID}
     volumes:
+    - .:/code
     - ~/.config/gcloud:/.config/gcloud
     - ./js/dist:/app/static
     environment:
@@ -17,4 +19,4 @@ services:
     init: true
     volumes:
     - .:/code
-    command: --mode development --watch
+    command: webpack --mode development --watch
