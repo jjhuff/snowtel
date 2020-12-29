@@ -16,8 +16,8 @@ import {
   Route,
 } from "react-router-dom";
 
-import SensorList from "./components/SensorList.jsx";
-import SensorDetail from "./components/SensorDetail.jsx";
+import SensorListPage from "./components/SensorListPage.jsx";
+import SensorDetailPage from "./components/SensorDetailPage.jsx";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -73,10 +73,10 @@ const App = () => {
               <Container maxWidth="lg" className={classes.container}>
                   <Switch>
                       <Route path="/sensor/:id">
-                          <SensorDetail/>
+                          <SensorDetailPage/>
                       </Route>
                       <Route path="/">
-                          <SensorList/>
+                          <SensorListPage/>
                       </Route>
                   </Switch>
               </Container>

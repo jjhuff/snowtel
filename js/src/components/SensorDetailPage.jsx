@@ -11,13 +11,16 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import Typography from "@material-ui/core/Typography";
 import { ResponsiveLine } from "@nivo/line"
 
+import CurrentReading from "./CurrentReading.jsx";
+import units from "../units.js";
+
 const useStyles = makeStyles((theme) => ({
   chartContainer: {
     height: "50vh",
   },
 }));
 
-export default function SensorDetail() {
+export default function SensorDetailPage() {
   const classes = useStyles();
     
   const [error, setError] = useState(null);
@@ -58,7 +61,7 @@ export default function SensorDetail() {
           id: 0,
           data: readings.map((r) => ({
               x: r.timestamp,
-              y: r.snow_depth,
+              y: units.imperial.dist.convert(r.snow_depth),
           })),
       }
   ];
@@ -73,21 +76,7 @@ export default function SensorDetail() {
             <Typography variant="h3">
                 {details.name}
             </Typography>
-            <Typography>
-                Timestamp: {readings[0].timestamp}
-            </Typography>
-            <Typography>
-                Depth: {readings[0].snow_depth}
-            </Typography>
-            <Typography>
-                Surface Temp: {readings[0].surface_temp}
-            </Typography>
-            <Typography>
-                Ambient Temp: {readings[0].ambient_temp}
-            </Typography>
-            <Typography>
-                Head Temp: {readings[0].head_temp}
-            </Typography>
+            <CurrentReading reading={readings[0]}/>
             <div className={classes.chartContainer}>
                 <ResponsiveLine
                 data={chartData}
