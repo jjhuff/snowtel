@@ -169,7 +169,7 @@ func (app *AppContext) GetReadings(w rest.ResponseWriter, req *rest.Request) {
 	q := datastore.NewQuery(readingEntityKind).
 		Filter("sensor =", sensorKey).
 		Order("-timestamp").
-		Limit(2500)
+		Limit(10000)
 
 	afterStr := req.FormValue("after")
 	if afterStr != "" {

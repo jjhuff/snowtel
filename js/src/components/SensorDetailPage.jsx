@@ -9,15 +9,21 @@ import { makeStyles } from "@material-ui/core/styles";
 import Link from "@material-ui/core/Link";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Typography from "@material-ui/core/Typography";
+
 import { ResponsiveLine } from "@nivo/line"
 
 import CurrentReading from "./CurrentReading.jsx";
+import TimeRangePicker from "./TimeRangePicker.jsx";
 import units from "../units.js";
 
 const useStyles = makeStyles((theme) => ({
   chartContainer: {
     height: "50vh",
   },
+  timePicker: {
+      display: "flex",
+      justifyContent: "flex-end",
+  }
 }));
 
 export default function SensorDetailPage() {
@@ -31,13 +37,15 @@ export default function SensorDetailPage() {
   const [details, setDetails] = useState({});
   const [readings, setReadings] = useState([]);
 
+  const [timeRange, setTimeRange] = useState(7*24);
+
   const curUnits = units.imperial;
   const refreshInterval = 60;
 
   let { id } = useParams();
 
   const fetchReadings = () => {
-      var dateOffset = (24*60*60*1000) * 14;
+      var dateOffset = (60*60*1000) * timeRange;
       var afterDate = new Date();
       afterDate.setTime(afterDate.getTime() - dateOffset);
       const apiUrl = `/_/api/v1/sensors/${id}/readings?after=${afterDate.toISOString()}`;
@@ -63,7 +71,7 @@ export default function SensorDetailPage() {
       fetchReadings();
       const interval = setInterval(fetchReadings, refreshInterval*1000);
       return () => clearInterval(interval);
-  }, [id, refreshInterval])
+  }, [id, refreshInterval, timeRange])
 
   let depthChartData = [
       {
@@ -131,6 +139,9 @@ export default function SensorDetailPage() {
                 {details.name}
             </Typography>
             <CurrentReading reading={readings[0]}/>
+            <div className={classes.timePicker}>
+                <TimeRangePicker value={timeRange} onChange={setTimeRange}/>
+            </div>
             <div className={classes.chartContainer}>
                 <ResponsiveLine {...sharedChartProps}
                 data={depthChartData}
