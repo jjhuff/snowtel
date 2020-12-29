@@ -16,11 +16,8 @@ deploy: _docker_gcloud
 logs: _docker_gcloud
 	$(DOCKER_RUN) -i  methowsnow_gcloud gcloud app logs tail
 
-start: _docker_godev _docker_webpack
+run: _docker_godev _docker_webpack
 	docker-compose up
-
-stop:
-	docker-compose down
 
 godev: _docker_godev
 	$(DOCKER_RUN) -i methowsnow_godev /bin/bash

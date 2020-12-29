@@ -3,5 +3,7 @@ FROM golang:1.15-buster as builder
 ENV GOCACHE /go/cache
 
 WORKDIR /code/go/snow.mspin.net
-#COPY go/snow.mspin.net/go.* ./
-#RUN go mod download
+COPY go/snow.mspin.net/go.* ./
+RUN go mod download && \
+    find /go/pkg  -type d -print0 | xargs -0 chmod 777  && \
+    find /go/pkg  -type f -print0 | xargs -0 chmod 666
