@@ -1,5 +1,0 @@
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'gcr.io/methowsnow/frontend', '-f', 'Dockerfile.frontend', '.' ]
-images: ['gcr.io/methowsnow/frontend']
-  

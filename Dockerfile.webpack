@@ -8,7 +8,4 @@ COPY js/package.json js/yarn.lock* /
 RUN yarn --no-cache
 ENV PATH=/node_modules/.bin/:$PATH
 
-# Copy over code
-#RUN mkdir -p /code/js
 WORKDIR /code/js
-#COPY js/ .
