@@ -32,8 +32,21 @@ export default function SensorDetailPage() {
   const [readings, setReadings] = useState([]);
 
   const curUnits = units.imperial;
+  const refreshInterval = 60;
 
   let { id } = useParams();
+
+  const fetchReadings = () => {
+      var dateOffset = (24*60*60*1000) * 14;
+      var afterDate = new Date();
+      afterDate.setTime(afterDate.getTime() - dateOffset);
+      const apiUrl = `/_/api/v1/sensors/${id}/readings?after=${afterDate.toISOString()}`;
+      axios.get(apiUrl).then((result) => {
+          setReadings(result.data);
+          setIsReadingsLoaded(true);
+        }
+      )
+  }
 
   // Load details
   useEffect(() => {
@@ -47,16 +60,10 @@ export default function SensorDetailPage() {
 
   // Load details
   useEffect(() => {
-      var dateOffset = (24*60*60*1000) * 14;
-      var afterDate = new Date();
-      afterDate.setTime(afterDate.getTime() - dateOffset);
-      const apiUrl = `/_/api/v1/sensors/${id}/readings?after=${afterDate.toISOString()}`;
-      axios.get(apiUrl).then((result) => {
-          setReadings(result.data);
-          setIsReadingsLoaded(true);
-        }
-      )
-  }, [id])
+      fetchReadings();
+      const interval = setInterval(fetchReadings, refreshInterval*1000);
+      return () => clearInterval(interval);
+  }, [id, refreshInterval])
 
   let depthChartData = [
       {
