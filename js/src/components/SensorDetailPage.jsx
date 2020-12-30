@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios"
 import {
     Link as RouterLink,
@@ -26,6 +26,32 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+async function fetchReadings(id, after){
+    const apiUrl = `/_/api/v1/sensors/${id}/readings?after=${after}`;
+    const result = await axios.get(apiUrl);
+    return result.data
+}
+
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
+
+  // Remember the latest callback.
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the interval.
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
+
 export default function SensorDetailPage() {
   const classes = useStyles();
     
@@ -40,7 +66,7 @@ export default function SensorDetailPage() {
   const [timeRange, setTimeRange] = useState(7*24);
 
   const curUnits = units.imperial;
-  const refreshInterval = 15*60;
+  const refreshInterval = 5*60;
 
   let { id } = useParams();
 
@@ -55,31 +81,40 @@ export default function SensorDetailPage() {
   }, [id])
 
   // Load readings
-  async function fetchReadings(){
+  useEffect(() => {
+      let ignore = false
+
       const dateOffset = (60*60*1000) * timeRange;
       let afterDate = new Date();
       afterDate.setTime(afterDate.getTime() - dateOffset)
       afterDate.setSeconds(0);
       afterDate.setMilliseconds(0);
-      const apiUrl = `/_/api/v1/sensors/${id}/readings?after=${afterDate.toISOString()}`;
 
-      const result = await axios.get(apiUrl);
+      fetchReadings(id, afterDate.toISOString()).then( (newReadings) => {
+          if (!ignore) {
+              setReadings(newReadings);
+              setIsReadingsLoaded(true);
+          }
+      })
 
-      setReadings(result.data);
-      setIsReadingsLoaded(true);
-  }
+  }, [id, timeRange])
 
-  useEffect(() => {
-      fetchReadings();
-      const interval = setInterval(fetchReadings, refreshInterval*1000);
-      return () => clearInterval(interval);
-  }, [id, refreshInterval, timeRange])
+  useInterval(() =>{
+      if (readings.length === 0) {
+          return
+      }
+      fetchReadings(id, readings[0].timestamp).then((newReadings) => {
+          if (newReadings.length > 0) {
+              setReadings([...newReadings, ...readings]);
+          }
+      })
+  }, refreshInterval*1000);
 
   let depthChartData = [
       {
           id: "Depth",
           data: readings.map((r) => ({
-              x: r.timestamp,
+              x: r.timestamp.substr(0, 19),
               y: curUnits.dist.convert(r.snow_depth),
           })),
       }
@@ -89,14 +124,14 @@ export default function SensorDetailPage() {
       {
           id: "Surface",
           data: readings.map((r) => ({
-              x: r.timestamp,
+              x: r.timestamp.substr(0, 19),
               y: curUnits.temp.convert(r.surface_temp),
           })),
       },
       {
           id: "Ambient",
           data: readings.map((r) => ({
-              x: r.timestamp,
+              x: r.timestamp.substr(0, 19),
               y: curUnits.temp.convert(r.ambient_temp),
           })),
       }
@@ -107,7 +142,10 @@ export default function SensorDetailPage() {
       curve:"step",
       enablePoints: false,
       isInteractive: false,
-      xScale:{ format: "%Y-%m-%dT%H:%M:%S%Z", type: "time" },
+      xScale:{
+          format: "%Y-%m-%dT%H:%M:%S",
+          type: "time"
+      },
       xFormat:"time:%Y-%m-%d",
       yScale:{
           type: "linear",
