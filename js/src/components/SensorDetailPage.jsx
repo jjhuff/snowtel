@@ -40,7 +40,7 @@ export default function SensorDetailPage() {
   const [timeRange, setTimeRange] = useState(7*24);
 
   const curUnits = units.imperial;
-  const refreshInterval = 60;
+  const refreshInterval = 15*60;
 
   let { id } = useParams();
 
