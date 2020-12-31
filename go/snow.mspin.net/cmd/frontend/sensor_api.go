@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -31,6 +32,18 @@ func (v NullableFloat) MarshalJSON() ([]byte, error) {
 		return json.Marshal(nil)
 	} else {
 		return json.Marshal(float32(v))
+	}
+}
+
+func ParseNullableFloat(s string) NullableFloat {
+	if s == "" {
+		return NullableFloat(math.NaN())
+	}
+	v, err := strconv.ParseFloat(s, 32)
+	if err != nil {
+		return NullableFloat(math.NaN())
+	} else {
+		return NullableFloat(v)
 	}
 }
 
@@ -196,102 +209,6 @@ func (app *AppContext) GetReadings(w rest.ResponseWriter, req *rest.Request) {
 	log.Printf("Marshaling: %d %v", len(b), err)
 
 	w.WriteJson(readings)
-}
-
-func (app *AppContext) PostReading(w rest.ResponseWriter, req *rest.Request) {
-	ctx := req.Request.Context()
-
-	sensorId := req.PathParam("id")
-	if sensorId == "" {
-		rest.Error(w, "Missing sensor id", http.StatusBadRequest)
-		return
-	}
-
-	// Helper to parse a float form field
-	getNullableFloat := func(field string) (NullableFloat, error) {
-		f, err := strconv.ParseFloat(req.FormValue(field), 32)
-		if err != nil {
-			rest.Error(w, "Bad param: "+field, http.StatusBadRequest)
-			return NullableFloat(math.NaN()), err
-		} else {
-			return NullableFloat(f), nil
-		}
-	}
-	getFloat := func(field string) (float32, error) {
-		f, err := strconv.ParseFloat(req.FormValue(field), 32)
-		if err != nil {
-			rest.Error(w, "Bad param: "+field, http.StatusBadRequest)
-			return float32(math.NaN()), err
-		} else {
-			return float32(f), nil
-		}
-	}
-
-	// Parse reading data
-	var err error
-	reading := Reading{
-		Sensor:      datastore.NameKey(sensorEntityKind, sensorId, nil),
-		Timestamp:   time.Now(),
-		LIDARSignal: NullableFloat(math.NaN()),
-		StationTemp: NullableFloat(math.NaN()),
-	}
-
-	if reading.AmbientTemp, err = getNullableFloat("ambient_temp"); err != nil {
-		return
-	}
-	if reading.SurfaceTemp, err = getNullableFloat("surface_temp"); err != nil {
-		return
-	}
-	if reading.HeadTemp, err = getNullableFloat("head_temp"); err != nil {
-		return
-	}
-	if req.FormValue("lidar_signal") != "" {
-		if reading.LIDARSignal, err = getNullableFloat("lidar_signal"); err != nil {
-			return
-		}
-	}
-	var snow_dist float32
-	if snow_dist, err = getFloat("snow_dist"); err != nil {
-		return
-	}
-
-	// Get/Create the sensor
-	var sensor Sensor
-	sensor, err = app.getSensor(ctx, sensorId)
-	if err != nil {
-		if err == datastore.ErrNoSuchEntity {
-			log.Printf("Creating new sensor: %s", sensorId)
-			sensor.Id = sensorId
-			sensor.Name = "Unknown - " + sensorId
-			sensor.Height = snow_dist
-			err = app.putSensor(ctx, sensor)
-		}
-		if err != nil {
-			rest.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// Calculate snow depth
-	reading.SnowDepth = sensor.Height - snow_dist
-	reading.SensorHeight = sensor.Height
-
-	// Fetch info from WeatherUnderground
-	if sensor.WeatherUndergroundStationId != "" {
-		t, err := app.getWeatherUndergroundTemp(ctx, sensor.WeatherUndergroundStationId)
-		if err != nil {
-			log.Printf("Failed to read station temp: %s", err.Error())
-		} else {
-			reading.StationTemp = NullableFloat(t)
-		}
-	}
-
-	readingKey := datastore.IncompleteKey(readingEntityKind, nil)
-	_, err = app.Datastore.Put(ctx, readingKey, &reading)
-	if err != nil {
-		rest.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 }
 
 func (app *AppContext) DeleteReadings(w rest.ResponseWriter, req *rest.Request) {
@@ -483,4 +400,76 @@ func (app *AppContext) FixReadings(w rest.ResponseWriter, req *rest.Request) {
 			}
 		}
 	}
+}
+
+type webhookRequest struct {
+	Event  string `json:"event"`
+	Data   string `json:"data"`
+	CoreId string `json:"coreid"`
+}
+
+func (app *AppContext) ReadingHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	reqBody, _ := ioutil.ReadAll(r.Body)
+
+	var webhook webhookRequest
+	err := json.Unmarshal(reqBody, &webhook)
+	if err != nil {
+		log.Printf("Failed to unmarshal. err:%s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	values, err := url.ParseQuery(webhook.Data)
+	if err != nil {
+		log.Printf("Failed to parse data. data:'%s' err:%s", webhook.Data, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	sensorId := webhook.CoreId
+
+	// Parse reading data
+	reading := Reading{
+		Sensor:      datastore.NameKey(sensorEntityKind, sensorId, nil),
+		Timestamp:   time.Now(),
+		AmbientTemp: ParseNullableFloat(values.Get("ambient_temp")),
+		SurfaceTemp: ParseNullableFloat(values.Get("surface_temp")),
+		HeadTemp:    ParseNullableFloat(values.Get("head_temp")),
+		StationTemp: NullableFloat(math.NaN()),
+		LIDARSignal: ParseNullableFloat(values.Get("lidar_signal")),
+	}
+
+	snow_dist, _ := strconv.ParseFloat(values.Get("snow_dist"), 32)
+
+	// Get/Create the sensor
+	var sensor Sensor
+	sensor, err = app.getSensor(ctx, sensorId)
+	if err != nil {
+		if err == datastore.ErrNoSuchEntity {
+			log.Printf("Creating new sensor: %s", sensorId)
+			sensor.Id = sensorId
+			sensor.Name = "Unknown - " + sensorId
+			sensor.Height = float32(snow_dist)
+			err = app.putSensor(ctx, sensor)
+		}
+		if err != nil {
+			log.Printf("Error creating sensor. id:%s err:%s", sensorId, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Calculate snow depth
+	reading.SnowDepth = sensor.Height - float32(snow_dist)
+	reading.SensorHeight = sensor.Height
+	log.Printf("Webhook reading: %#v", reading)
+
+	readingKey := datastore.IncompleteKey(readingEntityKind, nil)
+	_, err = app.Datastore.Put(ctx, readingKey, &reading)
+	if err != nil {
+		log.Printf("Error writing reading. id:%s err:%s", sensorId, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
