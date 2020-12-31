@@ -1,0 +1,35 @@
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: Build
+    args:
+      - build
+      - '--no-cache'
+      - '-t'
+      - 'us.gcr.io/$PROJECT_ID/snowtel/frontend:$COMMIT_SHA'
+      - .
+      - '-f'
+      - Dockerfile.frontend
+  - name: gcr.io/cloud-builders/docker
+    id: Push
+    args:
+      - push
+      - 'us.gcr.io/$PROJECT_ID/snowtel/frontend:$COMMIT_SHA'
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: Deploy
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - frontend
+      - '--platform=managed'
+      - '--image=us.gcr.io/$PROJECT_ID/snowtel/frontend:$COMMIT_SHA'
+      - >-
+        --labels=commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,$_LABELS
+      - '--region=us-central1'
+      - '--quiet'
+images:
+  - 'us.gcr.io/$PROJECT_ID/snowtel/frontend:$COMMIT_SHA'
+options:
+  substitutionOption: ALLOW_LOOSE
