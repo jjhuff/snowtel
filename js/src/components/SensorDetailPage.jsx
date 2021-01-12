@@ -147,11 +147,6 @@ export default function SensorDetailPage() {
           type: "time"
       },
       xFormat:"time:%Y-%m-%d",
-      yScale:{
-          type: "linear",
-          min: "auto",
-          max: "auto",
-      },
       axisBottom:{
           format: "%Y-%m-%d %H:%M",
           tickValues: 5,
@@ -222,6 +217,11 @@ export default function SensorDetailPage() {
                         lineStyle: { stroke: '#3030dd', strokeWidth: 2 },
                     }
                 ]}
+                yScale={{
+                    type: "linear",
+                    min: "auto",
+                    max: "auto",
+                }}
                 />
             </div>
         </div>
