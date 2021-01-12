@@ -195,6 +195,11 @@ export default function SensorDetailPage() {
                     legendOffset: -40,
                     legendPosition: "middle"
                 }}
+                yScale={{
+                    type: "linear",
+                    min: "0",
+                    max: "auto",
+                }}
                 />
             </div>
             <div className={classes.chartContainer}>
